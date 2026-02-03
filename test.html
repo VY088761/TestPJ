@@ -3,337 +3,283 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>點擊禮物盒 - 跳出鬼臉</title>
+  <title>禮物盒（請點我）- 鬼臉 GIF 範例</title>
   <style>
     :root{
-      --bg:#0b0720;
-      --box:#ff4d67;
-      --ribbon:#fff2f3;
-      --shadow: rgba(0,0,0,0.45);
-      --accent: #ffd166;
+      --bg: #0b0720;
+      --box:#e54b6b;
+      --box-dark:#b5384f;
+      --ribbon:#fff7ea;
+      --accent:#ffd166;
+      --glass: rgba(255,255,255,0.06);
     }
-    html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC";background:
-      radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,0.02), transparent),
-      linear-gradient(180deg,#050312 0%, #0b0720 60%); color:#fff;display:flex;align-items:center;justify-content:center;}
-    .wrap{display:flex;flex-direction:column;align-items:center;gap:18px}
-    .hint{font-size:18px;opacity:0.95}
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans TC",Arial;background:
+      radial-gradient(800px 400px at 10% 10%, rgba(255,255,255,0.02), transparent),
+      linear-gradient(180deg,#050312 0%, var(--bg) 60%);
+      color:#fff;display:flex;align-items:center;justify-content:center;}
 
-    .box-scene{width:260px;height:260px;position:relative;display:flex;align-items:flex-end;justify-content:center;cursor:pointer;user-select:none}
+    .stage{display:flex;flex-direction:column;align-items:center;gap:18px;padding:28px}
 
-    /* 禮物盒本體（始終蓋著，不做開蓋動畫） */
-    .gift{
-      width:160px;height:120px;background:linear-gradient(180deg,var(--box), #b32a45);
-      border-radius:8px;position:relative;box-shadow:0 14px 30px var(--shadow), inset 0 -6px 12px rgba(0,0,0,0.15);
-      transform-origin:center bottom;
-    }
-    /* 蓋子（靜止的蓋著樣式） */
-    .lid{
-      position:absolute;top:-26px;width:180px;height:36px;background:linear-gradient(180deg,#ff6d80,#b02a40);
-      border-radius:8px;left:50%;transform:translateX(-50%);box-shadow:0 8px 18px rgba(0,0,0,0.4);
-      transform-origin:center bottom;
-    }
-    /* 蝴蝶結 (簡單造型) */
-    .bow{
-      position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:84px;height:48px;
-      display:flex;align-items:center;justify-content:center;gap:6px;
-    }
-    .bow .knot{width:18px;height:18px;background:var(--ribbon);border-radius:4px;box-shadow:inset 0 -3px rgba(0,0,0,0.08)}
-    .bow .loop{width:30px;height:18px;background:linear-gradient(180deg,#fff,#ffd6db);border-radius:8px;transform:rotate(10deg)}
-    .bow .loop.right{transform:rotate(-10deg)}
-    /* 綁帶 */
-    .ribbon-vert{position:absolute;left:50%;top:0;bottom:0;width:18px;background:linear-gradient(180deg,#ffdfe6,#ffb6c7);transform:translateX(-50%);border-radius:6px}
-    .ribbon-horiz{position:absolute;top:36px;left:6px;right:6px;height:18px;background:linear-gradient(90deg,#ffdfe6,#ffb6c7);border-radius:6px}
-
-    /* CTA：大、閃爍的「請點我」 */
+    /* CTA 文字（大、閃爍）*/
     .cta {
-      position:absolute;
-      top:14px;
-      left:50%;
-      transform:translateX(-50%);
+      font-size:36px;
       font-weight:900;
-      font-size:34px;
-      letter-spacing:2px;
       color:var(--accent);
-      text-shadow:
-        0 0 6px rgba(255,209,102,0.9),
-        0 6px 18px rgba(0,0,0,0.6);
-      pointer-events:none;
+      letter-spacing:2px;
+      text-shadow:0 6px 18px rgba(0,0,0,0.6),0 0 10px rgba(255,209,102,0.6);
+      animation: glow 1.2s ease-in-out infinite, flicker 2s infinite;
       user-select:none;
-      animation: glow 1200ms ease-in-out infinite, flicker 2000ms infinite;
     }
     @keyframes glow {
-      0% { text-shadow: 0 0 2px rgba(255,209,102,0.6), 0 4px 12px rgba(0,0,0,0.5); transform: translateX(-50%) translateY(0) scale(1); opacity:0.95; }
-      50% { text-shadow: 0 0 16px rgba(255,209,102,1), 0 10px 28px rgba(0,0,0,0.6); transform: translateX(-50%) translateY(-4px) scale(1.02); opacity:1; }
-      100% { text-shadow: 0 0 2px rgba(255,209,102,0.6), 0 4px 12px rgba(0,0,0,0.5); transform: translateX(-50%) translateY(0) scale(1); opacity:0.95; }
+      0%{ transform: translateY(0) scale(1); opacity:0.95; }
+      50%{ transform: translateY(-6px) scale(1.03); opacity:1; }
+      100%{ transform: translateY(0) scale(1); opacity:0.95; }
     }
-    /* 亂序微閃效果讓文字像在閃爍 */
     @keyframes flicker {
-      0% { opacity:1; filter:brightness(1.0); }
-      7% { opacity:0.85; filter:brightness(1.3); }
-      14% { opacity:0.98; filter:brightness(0.9); }
-      21% { opacity:0.92; filter:brightness(1.2); }
-      28% { opacity:0.99; filter:brightness(1.0); }
-      100% { opacity:1; filter:brightness(1.0); }
+      0%{ filter:brightness(1); }
+      15%{ filter:brightness(1.25); }
+      30%{ filter:brightness(0.9); }
+      50%{ filter:brightness(1.1); }
+      100%{ filter:brightness(1); }
     }
 
-    /* 小火花／confetti */
-    .confetti { position:absolute; inset:0; pointer-events:none; overflow:visible; }
-    .confetti .p { position:absolute; width:8px; height:12px; border-radius:2px; transform-origin:center; opacity:0; animation:burst 900ms forwards ease-out; }
-    @keyframes burst {
-      0% { opacity:1; transform:translateY(0) scale(1) rotate(0deg); }
-      100% { opacity:0; transform:translateY(-160px) translateX(var(--tx)) rotate(var(--rot)) scale(0.6); }
+    /* 禮物盒容器 */
+    .box-wrap{ width:220px; height:220px; display:flex; align-items:center; justify-content:center; position:relative; }
+    /* 正方形禮物盒（始終蓋著） */
+    .gift {
+      width:160px; height:160px; background: linear-gradient(180deg, var(--box), var(--box-dark));
+      border-radius:8px; position:relative; box-shadow: 0 18px 40px rgba(0,0,0,0.6), inset 0 -6px 14px rgba(0,0,0,0.12);
+      display:flex; align-items:center; justify-content:center; cursor:pointer; outline: none; border: none;
+      transition: transform 160ms ease, box-shadow 160ms ease;
+      user-select:none;
+    }
+    .gift:active { transform: translateY(3px) scale(0.995); }
+    .gift:focus { box-shadow: 0 20px 46px rgba(0,0,0,0.7), 0 0 0 6px rgba(255,209,102,0.06); }
+
+    /* 綁帶（垂直與水平）*/
+    .ribbon-vert {
+      position:absolute; width:20px; height:120px; background: linear-gradient(180deg,#fff6e9,#ffd6d8);
+      left:50%; transform:translateX(-50%); border-radius:6px; z-index:2;
+      box-shadow: inset 0 -4px rgba(0,0,0,0.06);
+    }
+    .ribbon-horiz {
+      position:absolute; height:20px; left:24px; right:24px; top:50%; transform:translateY(-50%);
+      background: linear-gradient(90deg,#fff6e9,#ffd6d8); border-radius:6px; z-index:2;
+      box-shadow: inset -4px 0 rgba(0,0,0,0.06);
     }
 
-    /* 模態覆蓋 (備援) */
-    .overlay { position:fixed; inset:0; display:flex;align-items:center;justify-content:center;background:rgba(3,2,10,0.65);backdrop-filter:blur(2px); visibility:hidden; opacity:0; transition:opacity .18s; z-index:40 }
+    /* 蝴蝶結（簡單造型）*/
+    .bow {
+      position:absolute; top:18px; left:50%; transform:translateX(-50%); z-index:3;
+      display:flex; align-items:center; gap:6px;
+    }
+    .bow .loop {
+      width:36px; height:22px; background: linear-gradient(180deg,#fff,#ffd6db);
+      border-radius:12px; transform-origin:center; box-shadow: inset 0 -4px rgba(0,0,0,0.06);
+    }
+    .bow .knot { width:18px; height:18px; background:var(--ribbon); border-radius:4px; box-shadow: inset 0 -3px rgba(0,0,0,0.06); }
+
+    /* 小提示文字 */
+    .hint { font-size:14px; opacity:0.9; color:#dcd7e5; }
+
+    /* confetti */
+    .confetti { position:absolute; inset:0; pointer-events:none; overflow:visible; z-index:4; }
+    .confetti .piece {
+      position:absolute; width:8px; height:12px; border-radius:3px; opacity:0; transform-origin:center;
+      animation: confettiAnim 900ms forwards ease-out;
+    }
+    @keyframes confettiAnim {
+      0% { opacity:1; transform: translateY(0) rotate(0) scale(1); }
+      100% { opacity:0; transform: translateY(-160px) translateX(var(--tx)) rotate(var(--rot)) scale(0.6); }
+    }
+
+    /* overlay modal */
+    .overlay {
+      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+      background: rgba(3,2,10,0.7); backdrop-filter: blur(4px); visibility:hidden; opacity:0;
+      transition: opacity 180ms ease; z-index:50;
+    }
     .overlay.show { visibility:visible; opacity:1; }
-    .modal { width:min(520px,92vw); max-width:760px; background:linear-gradient(180deg,#0b0716,#120922); border-radius:12px; padding:28px; box-shadow:0 20px 60px rgba(3,2,10,0.7); color:#fff; display:flex;flex-direction:column;align-items:center; gap:14px; }
-    .close-btn{background:#ff6b6b;color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
-    .small{font-size:13px;opacity:0.9}
+    .modal {
+      width:min(760px,92vw); max-width:760px; background: linear-gradient(180deg,#0b0716,#120922);
+      border-radius:12px; padding:16px; box-shadow: 0 30px 80px rgba(0,0,0,0.7); display:flex; flex-direction:column;
+      align-items:center; gap:12px; color:#fff;
+    }
+    .modal .gif {
+      width:88vw; max-width:560px; height:auto; border-radius:8px; display:block;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+    .close-btn {
+      background:var(--accent); color:#2b2216; border:0; padding:10px 14px; border-radius:8px; cursor:pointer; font-weight:700;
+    }
 
-    @media (max-width:420px){
-      .gift{width:140px;height:100px}
-      .lid{width:160px;height:32px}
-      .cta { font-size:24px; top:8px; }
+    /* small screens */
+    @media (max-width:420px) {
+      .cta { font-size:26px; }
+      .box-wrap{ width:180px; height:180px; }
+      .gift{ width:140px; height:140px; }
+      .bow .loop{ width:28px; height:18px; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="hint">點擊禮物盒看看有什麼驚喜！</div>
+  <main class="stage" role="main">
+    <div class="cta" aria-hidden="true">請點我</div>
 
-    <div id="scene" class="box-scene" aria-hidden="false" title="點擊我">
-      <div class="confetti" id="confetti"></div>
+    <div class="box-wrap">
+      <div id="confetti" class="confetti" aria-hidden="true"></div>
 
-      <div id="lid" class="lid" aria-hidden="true">
-        <div class="bow" aria-hidden="true">
-          <div class="loop"></div>
-          <div class="knot"></div>
-          <div class="loop right"></div>
-        </div>
-      </div>
-
-      <div id="gift" class="gift" role="button" tabindex="0" aria-label="禮物盒"></div>
+      <button id="gift" class="gift" aria-label="禮物盒，點擊觀看驚喜" title="點我看驚喜">
+        <!-- optional label inside box -->
+      </button>
 
       <div class="ribbon-vert" aria-hidden="true"></div>
       <div class="ribbon-horiz" aria-hidden="true"></div>
 
-      <!-- 大且閃爍的請點我 -->
-      <div class="cta" aria-hidden="true">請點我</div>
+      <div class="bow" aria-hidden="true">
+        <div class="loop" style="transform:rotate(10deg)"></div>
+        <div class="knot"></div>
+        <div class="loop" style="transform:rotate(-10deg)"></div>
+      </div>
     </div>
 
-    <div class="small">（或按鍵盤空白鍵 / Enter）</div>
-  </div>
+    <div class="hint">（或按 空白鍵 / Enter）</div>
+  </main>
 
-  <!-- 模態備援 -->
-  <div id="overlay" class="overlay" role="dialog" aria-modal="true">
-    <div class="modal" id="modalContent">
-      <div id="ghostContainer" style="width:320px;height:320px;display:flex;align-items:center;justify-content:center"></div>
-      <button class="close-btn" id="closeModal">關閉</button>
+  <!-- modal overlay (只用 modal，避免被瀏覽器彈窗阻擋) -->
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document">
+      <!-- 使用者要求顯示 giphy.gif -->
+      <!-- 把 giphy.gif 放在同目錄，或改成完整 URL -->
+      <img id="ghostGif" class="gif" src="giphy.gif" alt="鬼臉 GIF (giphy.gif)" />
+      <button id="close" class="close-btn" aria-label="關閉">關閉</button>
     </div>
   </div>
 
   <script>
-    const scene = document.getElementById('scene');
+    // 元件
     const gift = document.getElementById('gift');
-    const lid = document.getElementById('lid');
+    const overlay = document.getElementById('overlay');
+    const closeBtn = document.getElementById('close');
+    const ghostGif = document.getElementById('ghostGif');
     const confettiRoot = document.getElementById('confetti');
 
-    // 產生 confetti 元素
-    function spawnConfetti(xOrigin = 80, count = 18) {
-      const colors = ['#ffd166','#ef476f','#06d6a0','#118ab2','#f72585'];
+    // 產生簡單 confetti（視覺加強）
+    function spawnConfetti(count = 18) {
+      const colors = ['#ffd166','#ef476f','#06d6a0','#118ab2','#f72585','#ffffff'];
       for (let i = 0; i < count; i++) {
         const p = document.createElement('div');
-        p.className = 'p';
+        p.className = 'piece';
         p.style.background = colors[Math.floor(Math.random()*colors.length)];
         const tx = (Math.random()*260 - 130) + 'px';
+        const rot = (Math.random()*720 - 360) + 'deg';
         p.style.setProperty('--tx', tx);
-        p.style.setProperty('--rot', (Math.random()*720 - 360) + 'deg');
-        p.style.left = (80 + (Math.random()*40-20)) + 'px';
-        p.style.top = (60 + Math.random()*30) + 'px';
-        p.style.transform = `translateZ(0)`;
+        p.style.setProperty('--rot', rot);
+        // spawn around center of gift
+        const left = 80 + (Math.random()*40 - 20);
+        const top = 80 + (Math.random()*40 - 20);
+        p.style.left = left + 'px';
+        p.style.top = top + 'px';
+        p.style.transform = 'translateZ(0)';
         confettiRoot.appendChild(p);
-        // 移除
+        // remove after animation
         setTimeout(()=> p.remove(), 1200 + Math.random()*600);
       }
     }
 
-    // WebAudio 簡單打擊音（用於禮物打開）
-    function playPopAudio() {
+    // 簡單按鍵音（非必要，若瀏覽器允許會播放）
+    function playPop() {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const o = ctx.createOscillator();
         const g = ctx.createGain();
         o.type = 'triangle';
-        o.frequency.setValueAtTime(420, ctx.currentTime);
+        o.frequency.setValueAtTime(520, ctx.currentTime);
         o.connect(g);
         g.connect(ctx.destination);
         g.gain.setValueAtTime(0, ctx.currentTime);
-        g.gain.linearRampToValueAtTime(0.14, ctx.currentTime + 0.01);
+        g.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.01);
         o.start();
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
-        o.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 0.45);
-        setTimeout(()=>{ o.stop(); ctx.close(); }, 600);
-      } catch(e){ /* ignore */ }
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        o.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.5);
+        setTimeout(()=> { o.stop(); ctx.close(); }, 700);
+      } catch(e) { /* ignore if blocked */ }
     }
 
-    // 生成鬼臉頁面內容字串 (可寫入新視窗)
-    function ghostHtml() {
-      return `<!doctype html>
-      <html lang="zh-Hant">
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>鬼臉驚喜</title>
-        <style>
-          html,body{height:100%;margin:0;background:radial-gradient(circle at 20% 10%, #ffffff10, transparent), linear-gradient(180deg,#08010b,#0d0212);display:flex;align-items:center;justify-content:center;font-family:system-ui, -apple-system, "Noto Sans TC";color:#fff}
-          .stage{display:flex;flex-direction:column;align-items:center;gap:20px}
-          .ghost-wrap{width:320px;height:320px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 12px 28px rgba(0,0,0,0.6))}
-          svg{width:90%;height:90%;transform:scale(0.6);animation:pop 420ms cubic-bezier(.2,.9,.2,1) forwards}
-          @keyframes pop { from{transform:scale(0.1);opacity:0} to{transform:scale(1);opacity:1} }
-          .msg{font-size:20px;opacity:0.95}
-          .btn{background:#ffd6e0;color:#2b0611;padding:10px 14px;border-radius:9px;border:0;font-weight:700;cursor:pointer}
-        </style>
-      </head>
-      <body>
-        <div class="stage">
-          <div class="ghost-wrap" aria-hidden="false">
-            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="鬼臉">
-              <defs>
-                <radialGradient id="g" cx="40%" cy="30%">
-                  <stop offset="0%" stop-color="#ffffff"/>
-                  <stop offset="100%" stop-color="#e8f7ff"/>
-                </radialGradient>
-              </defs>
-              <g>
-                <path d="M30 70 Q30 30 70 24 Q100 18 130 24 Q170 30 170 70 Q170 110 160 126 Q150 142 140 140 Q130 138 120 146 Q110 154 100 146 Q90 138 80 142 Q70 146 60 142 Q50 138 40 126 Q30 110 30 70 Z"
-                  fill="url(#g)" stroke="#ffffff33" stroke-width="1.2" />
-                <ellipse cx="80" cy="82" rx="8" ry="12" fill="#0a0a0a" />
-                <ellipse cx="120" cy="82" rx="8" ry="12" fill="#0a0a0a" />
-                <path d="M78 118 Q100 136 122 118" stroke="#0a0a0a" stroke-width="6" stroke-linecap="round" fill="none" stroke-linejoin="round"/>
-                <g opacity="0.12" transform="translate(-6,-6)">
-                  <path d="M30 70 Q30 30 70 24 Q100 18 130 24 Q170 30 170 70 Q170 110 160 126 Q150 142 140 140 Q130 138 120 146 Q110 154 100 146 Q90 138 80 142 Q70 146 60 142 Q50 138 40 126 Q30 110 30 70 Z" fill="#ffffff" />
-                </g>
-              </g>
-            </svg>
-          </div>
-          <div class="msg">嚇一跳了嗎？👻</div>
-          <button class="btn" id="closeBtn">關閉</button>
-        </div>
-
-        <script>
-          try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const g = ctx.createGain();
-            const o1 = ctx.createOscillator(); o1.type='sine'; o1.frequency.value=240;
-            const o2 = ctx.createOscillator(); o2.type='sawtooth'; o2.frequency.value=360;
-            o1.connect(g); o2.connect(g); g.connect(ctx.destination);
-            g.gain.value = 0.0001;
-            g.gain.linearRampToValueAtTime(0.16, ctx.currentTime + 0.01);
-            o1.start(); o2.start();
-            g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.1);
-            o1.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 1.1);
-            o2.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 1.1);
-            setTimeout(()=>{ o1.stop(); o2.stop(); ctx.close(); }, 1300);
-          } catch(e){}
-          document.getElementById('closeBtn').addEventListener('click', ()=>window.close());
-        </script>
-      </body>
-      </html>`;
-    }
-
-    // 當禮物被點擊
-    let opened = false;
-    function onOpenTriggered(e) {
-      if (opened) return;
-      opened = true;
-
-      // 再次強調：禮物盒維持蓋著（不套用 open class）
-      spawnConfetti();
-      playPopAudio();
-
-      // 為避免瀏覽器阻擋彈窗，必須同步在使用者互動（click/keydown）處理 window.open
-      let win = null;
-      try {
-        win = window.open('', '_blank', 'noopener,noreferrer');
-      } catch (err) {
-        win = null;
-      }
-
-      if (win) {
-        // 直接把鬼臉內容寫入新視窗（同步），這樣大多數瀏覽器不會阻擋
-        try {
-          win.document.open();
-          win.document.write(ghostHtml());
-          win.document.close();
-          try { win.focus(); } catch(e){}
-        } catch (err) {
-          // 若寫入失敗（極少見），顯示備援 overlay
-          showOverlayFallback();
-        }
-      } else {
-        // 被阻擋 -> 顯示 overlay 備援
-        showOverlayFallback();
-      }
-
-      // 允許短時間後可再次觸發
-      setTimeout(()=>{ opened = false; }, 1200);
-    }
-
-    // overlay 備援的鬼臉 (與新視窗內容相同的簡化版)
-    const overlay = document.getElementById('overlay');
-    const modalGhost = document.getElementById('ghostContainer');
-    const closeModal = document.getElementById('closeModal');
-    function showOverlayFallback(){
-      // 插入一個 SVG 鬼臉到 modal
-      modalGhost.innerHTML = `
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="鬼臉" style="width:100%;height:100%">
-          <defs><radialGradient id="g2" cx="40%" cy="30%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#e8f7ff"/></radialGradient></defs>
-          <g>
-            <path d="M30 70 Q30 30 70 24 Q100 18 130 24 Q170 30 170 70 Q170 110 160 126 Q150 142 140 140 Q130 138 120 146 Q110 154 100 146 Q90 138 80 142 Q70 146 60 142 Q50 138 40 126 Q30 110 30 70 Z" fill="url(#g2)" stroke="#ffffff33" stroke-width="1.2" />
-            <ellipse cx="80" cy="82" rx="8" ry="12" fill="#0a0a0a" />
-            <ellipse cx="120" cy="82" rx="8" ry="12" fill="#0a0a0a" />
-            <path d="M78 118 Q100 136 122 118" stroke="#0a0a0a" stroke-width="6" stroke-linecap="round" fill="none" stroke-linejoin="round"/>
-          </g>
-        </svg>
-      `;
+    // 打開 modal（顯示 giphy.gif）
+    function showGhost() {
+      // 先確保 GIF 已設定好，如果找不到，顯示替代內容
+      // 顯示 overlay
       overlay.classList.add('show');
-      // 音效（再播放一次）
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const g = ctx.createGain();
-        const o1 = ctx.createOscillator(); o1.type='sine'; o1.frequency.value=240;
-        const o2 = ctx.createOscillator(); o2.type='sawtooth'; o2.frequency.value=360;
-        o1.connect(g); o2.connect(g); g.connect(ctx.destination);
-        g.gain.value = 0.0001;
-        g.gain.linearRampToValueAtTime(0.16, ctx.currentTime + 0.01);
-        o1.start(); o2.start();
-        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.1);
-        o1.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 1.1);
-        o2.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 1.1);
-        setTimeout(()=>{ o1.stop(); o2.stop(); ctx.close(); }, 1300);
-      } catch(e){}
+      overlay.setAttribute('aria-hidden','false');
+      // 觸發音效與 confetti
+      playPop();
+      spawnConfetti(24);
+      // 從頭播 GIF（如果想重新播放，替換 src trick）
+      const src = ghostGif.getAttribute('src') || '';
+      if (src) {
+        // force reload to restart animation
+        const t = Date.now();
+        ghostGif.src = src.split('?')[0] + '?_=' + t;
+      }
+      // focus close button for keyboard users
+      setTimeout(()=> closeBtn.focus(), 200);
     }
 
-    closeModal.addEventListener('click', ()=> overlay.classList.remove('show'));
+    function hideGhost() {
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden','true');
+      // stop gif by removing src (optional) - keep src to allow replay next time
+      // ghostGif.src = ghostGif.getAttribute('src'); // keep as-is
+      gift.focus();
+    }
 
-    // 點擊 / 鍵盤事件（同樣會在使用者互動流程中立即開新視窗）
-    gift.addEventListener('click', onOpenTriggered);
-    lid.addEventListener('click', onOpenTriggered);
-    scene.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' || e.code === 'Enter') {
+    // Click / keyboard handlers
+    function onActivate(e) {
+      // Only respond to primary mouse button or keyboard Enter/Space
+      if (e instanceof KeyboardEvent) {
+        if (e.code !== 'Space' && e.code !== 'Enter') return;
         e.preventDefault();
-        onOpenTriggered();
+      } else if (e instanceof MouseEvent) {
+        if (e.button !== 0) return;
+      }
+      showGhost();
+    }
+
+    gift.addEventListener('click', onActivate);
+    gift.addEventListener('keydown', (e) => {
+      if (e.code === 'Enter' || e.code === 'Space') {
+        e.preventDefault();
+        onActivate(e);
       }
     });
 
-    gift.addEventListener('keyup', (e) => {
-      if (e.code === 'Space' || e.code === 'Enter') onOpenTriggered();
+    // close handlers
+    closeBtn.addEventListener('click', hideGhost);
+    overlay.addEventListener('click', (e) => {
+      // only close when clicking outside modal content
+      if (e.target === overlay) hideGhost();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('show')) hideGhost();
     });
 
-    // 小提示動畫：載入時稍微抖動（純視覺）
+    // 初始焦點與無障礙
+    gift.setAttribute('tabindex','0');
+    gift.addEventListener('keyup', (e) => {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        // already handled on keydown, but keep fallback
+        onActivate(e);
+      }
+    });
+
+    // 小動畫：讓禮物緩微浮動吸引點擊
     setTimeout(()=> {
-      scene.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], { duration: 900, iterations: 1 });
+      gift.animate([
+        { transform: 'translateY(0)' },
+        { transform: 'translateY(-8px)' },
+        { transform: 'translateY(0)' }
+      ], { duration: 1400, iterations: Infinity, easing: 'ease-in-out' });
     }, 300);
   </script>
 </body>
