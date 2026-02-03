@@ -129,7 +129,7 @@
     <div class="box-wrap">
       <div id="confetti" class="confetti" aria-hidden="true"></div>
 
-      <button id="gift" class="gift" aria-label="禮物盒，點擊觀看驚喜" title="點我看驚喜">
+      <button id="gift" class="gift" aria-label="禮物盒，點我" title="點我">
         <!-- optional label inside box -->
       </button>
 
@@ -163,7 +163,8 @@
     const closeBtn = document.getElementById('close');
     const ghostGif = document.getElementById('ghostGif');
     const confettiRoot = document.getElementById('confetti');
-
+    const ribbon = document.querySelector('.ribbon-horiz');
+    
     // 產生簡單 confetti（視覺加強）
     function spawnConfetti(count = 18) {
       const colors = ['#ffd166','#ef476f','#06d6a0','#118ab2','#f72585','#ffffff'];
@@ -247,6 +248,7 @@
     }
 
     gift.addEventListener('click', onActivate);
+    ribbon.addEventListener('click', onActivate);
     gift.addEventListener('keydown', (e) => {
       if (e.code === 'Enter' || e.code === 'Space') {
         e.preventDefault();
