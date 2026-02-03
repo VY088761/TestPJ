@@ -10,28 +10,31 @@
       --box:#ff4d67;
       --ribbon:#fff2f3;
       --shadow: rgba(0,0,0,0.45);
+      --accent: #ffd166;
     }
     html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC";background:
       radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,0.02), transparent),
       linear-gradient(180deg,#050312 0%, #0b0720 60%); color:#fff;display:flex;align-items:center;justify-content:center;}
     .wrap{display:flex;flex-direction:column;align-items:center;gap:18px}
     .hint{font-size:18px;opacity:0.95}
-    .box-scene{width:220px;height:220px;position:relative;display:flex;align-items:flex-end;justify-content:center;cursor:pointer;user-select:none}
-    /* 禮物盒本體 */
+
+    .box-scene{width:260px;height:260px;position:relative;display:flex;align-items:flex-end;justify-content:center;cursor:pointer;user-select:none}
+
+    /* 禮物盒本體（始終蓋著，不做開蓋動畫） */
     .gift{
       width:160px;height:120px;background:linear-gradient(180deg,var(--box), #b32a45);
       border-radius:8px;position:relative;box-shadow:0 14px 30px var(--shadow), inset 0 -6px 12px rgba(0,0,0,0.15);
-      transform-origin:center bottom;transition:transform 420ms cubic-bezier(.2,.9,.2,1);
+      transform-origin:center bottom;
     }
-    /* 蓋子 */
+    /* 蓋子（靜止的蓋著樣式） */
     .lid{
-      position:absolute;top:-24px;width:180px;height:36px;background:linear-gradient(180deg,#ff6d80,#b02a40);
+      position:absolute;top:-26px;width:180px;height:36px;background:linear-gradient(180deg,#ff6d80,#b02a40);
       border-radius:8px;left:50%;transform:translateX(-50%);box-shadow:0 8px 18px rgba(0,0,0,0.4);
-      transform-origin:center bottom;transition:transform 520ms cubic-bezier(.15,.9,.2,1);
+      transform-origin:center bottom;
     }
     /* 蝴蝶結 (簡單造型) */
     .bow{
-      position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:84px;height:48px;
+      position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:84px;height:48px;
       display:flex;align-items:center;justify-content:center;gap:6px;
     }
     .bow .knot{width:18px;height:18px;background:var(--ribbon);border-radius:4px;box-shadow:inset 0 -3px rgba(0,0,0,0.08)}
@@ -40,9 +43,39 @@
     /* 綁帶 */
     .ribbon-vert{position:absolute;left:50%;top:0;bottom:0;width:18px;background:linear-gradient(180deg,#ffdfe6,#ffb6c7);transform:translateX(-50%);border-radius:6px}
     .ribbon-horiz{position:absolute;top:36px;left:6px;right:6px;height:18px;background:linear-gradient(90deg,#ffdfe6,#ffb6c7);border-radius:6px}
-    /* 點擊時開蓋 */
-    .open .lid{transform: translateX(-50%) translateY(-40px) rotate(-12deg) scale(1.03);}
-    .open .gift{transform: translateY(6px) rotate(-1.5deg) scaleY(0.98);}
+
+    /* CTA：大、閃爍的「請點我」 */
+    .cta {
+      position:absolute;
+      top:14px;
+      left:50%;
+      transform:translateX(-50%);
+      font-weight:900;
+      font-size:34px;
+      letter-spacing:2px;
+      color:var(--accent);
+      text-shadow:
+        0 0 6px rgba(255,209,102,0.9),
+        0 6px 18px rgba(0,0,0,0.6);
+      pointer-events:none;
+      user-select:none;
+      animation: glow 1200ms ease-in-out infinite, flicker 2000ms infinite;
+    }
+    @keyframes glow {
+      0% { text-shadow: 0 0 2px rgba(255,209,102,0.6), 0 4px 12px rgba(0,0,0,0.5); transform: translateX(-50%) translateY(0) scale(1); opacity:0.95; }
+      50% { text-shadow: 0 0 16px rgba(255,209,102,1), 0 10px 28px rgba(0,0,0,0.6); transform: translateX(-50%) translateY(-4px) scale(1.02); opacity:1; }
+      100% { text-shadow: 0 0 2px rgba(255,209,102,0.6), 0 4px 12px rgba(0,0,0,0.5); transform: translateX(-50%) translateY(0) scale(1); opacity:0.95; }
+    }
+    /* 亂序微閃效果讓文字像在閃爍 */
+    @keyframes flicker {
+      0% { opacity:1; filter:brightness(1.0); }
+      7% { opacity:0.85; filter:brightness(1.3); }
+      14% { opacity:0.98; filter:brightness(0.9); }
+      21% { opacity:0.92; filter:brightness(1.2); }
+      28% { opacity:0.99; filter:brightness(1.0); }
+      100% { opacity:1; filter:brightness(1.0); }
+    }
+
     /* 小火花／confetti */
     .confetti { position:absolute; inset:0; pointer-events:none; overflow:visible; }
     .confetti .p { position:absolute; width:8px; height:12px; border-radius:2px; transform-origin:center; opacity:0; animation:burst 900ms forwards ease-out; }
@@ -50,17 +83,18 @@
       0% { opacity:1; transform:translateY(0) scale(1) rotate(0deg); }
       100% { opacity:0; transform:translateY(-160px) translateX(var(--tx)) rotate(var(--rot)) scale(0.6); }
     }
+
     /* 模態覆蓋 (備援) */
     .overlay { position:fixed; inset:0; display:flex;align-items:center;justify-content:center;background:rgba(3,2,10,0.65);backdrop-filter:blur(2px); visibility:hidden; opacity:0; transition:opacity .18s; z-index:40 }
     .overlay.show { visibility:visible; opacity:1; }
     .modal { width:min(520px,92vw); max-width:760px; background:linear-gradient(180deg,#0b0716,#120922); border-radius:12px; padding:28px; box-shadow:0 20px 60px rgba(3,2,10,0.7); color:#fff; display:flex;flex-direction:column;align-items:center; gap:14px; }
     .close-btn{background:#ff6b6b;color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
-    /* 小提示文字 */
     .small{font-size:13px;opacity:0.9}
-    /* 響應式調整 */
+
     @media (max-width:420px){
       .gift{width:140px;height:100px}
       .lid{width:160px;height:32px}
+      .cta { font-size:24px; top:8px; }
     }
   </style>
 </head>
@@ -83,6 +117,9 @@
 
       <div class="ribbon-vert" aria-hidden="true"></div>
       <div class="ribbon-horiz" aria-hidden="true"></div>
+
+      <!-- 大且閃爍的請點我 -->
+      <div class="cta" aria-hidden="true">請點我</div>
     </div>
 
     <div class="small">（或按鍵盤空白鍵 / Enter）</div>
@@ -140,4 +177,164 @@
       } catch(e){ /* ignore */ }
     }
 
-    // 生成鬼臉頁面內容字串*
+    // 生成鬼臉頁面內容字串 (可寫入新視窗)
+    function ghostHtml() {
+      return `<!doctype html>
+      <html lang="zh-Hant">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>鬼臉驚喜</title>
+        <style>
+          html,body{height:100%;margin:0;background:radial-gradient(circle at 20% 10%, #ffffff10, transparent), linear-gradient(180deg,#08010b,#0d0212);display:flex;align-items:center;justify-content:center;font-family:system-ui, -apple-system, "Noto Sans TC";color:#fff}
+          .stage{display:flex;flex-direction:column;align-items:center;gap:20px}
+          .ghost-wrap{width:320px;height:320px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 12px 28px rgba(0,0,0,0.6))}
+          svg{width:90%;height:90%;transform:scale(0.6);animation:pop 420ms cubic-bezier(.2,.9,.2,1) forwards}
+          @keyframes pop { from{transform:scale(0.1);opacity:0} to{transform:scale(1);opacity:1} }
+          .msg{font-size:20px;opacity:0.95}
+          .btn{background:#ffd6e0;color:#2b0611;padding:10px 14px;border-radius:9px;border:0;font-weight:700;cursor:pointer}
+        </style>
+      </head>
+      <body>
+        <div class="stage">
+          <div class="ghost-wrap" aria-hidden="false">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="鬼臉">
+              <defs>
+                <radialGradient id="g" cx="40%" cy="30%">
+                  <stop offset="0%" stop-color="#ffffff"/>
+                  <stop offset="100%" stop-color="#e8f7ff"/>
+                </radialGradient>
+              </defs>
+              <g>
+                <path d="M30 70 Q30 30 70 24 Q100 18 130 24 Q170 30 170 70 Q170 110 160 126 Q150 142 140 140 Q130 138 120 146 Q110 154 100 146 Q90 138 80 142 Q70 146 60 142 Q50 138 40 126 Q30 110 30 70 Z"
+                  fill="url(#g)" stroke="#ffffff33" stroke-width="1.2" />
+                <ellipse cx="80" cy="82" rx="8" ry="12" fill="#0a0a0a" />
+                <ellipse cx="120" cy="82" rx="8" ry="12" fill="#0a0a0a" />
+                <path d="M78 118 Q100 136 122 118" stroke="#0a0a0a" stroke-width="6" stroke-linecap="round" fill="none" stroke-linejoin="round"/>
+                <g opacity="0.12" transform="translate(-6,-6)">
+                  <path d="M30 70 Q30 30 70 24 Q100 18 130 24 Q170 30 170 70 Q170 110 160 126 Q150 142 140 140 Q130 138 120 146 Q110 154 100 146 Q90 138 80 142 Q70 146 60 142 Q50 138 40 126 Q30 110 30 70 Z" fill="#ffffff" />
+                </g>
+              </g>
+            </svg>
+          </div>
+          <div class="msg">嚇一跳了嗎？👻</div>
+          <button class="btn" id="closeBtn">關閉</button>
+        </div>
+
+        <script>
+          try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const g = ctx.createGain();
+            const o1 = ctx.createOscillator(); o1.type='sine'; o1.frequency.value=240;
+            const o2 = ctx.createOscillator(); o2.type='sawtooth'; o2.frequency.value=360;
+            o1.connect(g); o2.connect(g); g.connect(ctx.destination);
+            g.gain.value = 0.0001;
+            g.gain.linearRampToValueAtTime(0.16, ctx.currentTime + 0.01);
+            o1.start(); o2.start();
+            g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.1);
+            o1.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 1.1);
+            o2.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 1.1);
+            setTimeout(()=>{ o1.stop(); o2.stop(); ctx.close(); }, 1300);
+          } catch(e){}
+          document.getElementById('closeBtn').addEventListener('click', ()=>window.close());
+        </script>
+      </body>
+      </html>`;
+    }
+
+    // 當禮物被點擊
+    let opened = false;
+    function onOpenTriggered(e) {
+      if (opened) return;
+      opened = true;
+
+      // 再次強調：禮物盒維持蓋著（不套用 open class）
+      spawnConfetti();
+      playPopAudio();
+
+      // 為避免瀏覽器阻擋彈窗，必須同步在使用者互動（click/keydown）處理 window.open
+      let win = null;
+      try {
+        win = window.open('', '_blank', 'noopener,noreferrer');
+      } catch (err) {
+        win = null;
+      }
+
+      if (win) {
+        // 直接把鬼臉內容寫入新視窗（同步），這樣大多數瀏覽器不會阻擋
+        try {
+          win.document.open();
+          win.document.write(ghostHtml());
+          win.document.close();
+          try { win.focus(); } catch(e){}
+        } catch (err) {
+          // 若寫入失敗（極少見），顯示備援 overlay
+          showOverlayFallback();
+        }
+      } else {
+        // 被阻擋 -> 顯示 overlay 備援
+        showOverlayFallback();
+      }
+
+      // 允許短時間後可再次觸發
+      setTimeout(()=>{ opened = false; }, 1200);
+    }
+
+    // overlay 備援的鬼臉 (與新視窗內容相同的簡化版)
+    const overlay = document.getElementById('overlay');
+    const modalGhost = document.getElementById('ghostContainer');
+    const closeModal = document.getElementById('closeModal');
+    function showOverlayFallback(){
+      // 插入一個 SVG 鬼臉到 modal
+      modalGhost.innerHTML = `
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="鬼臉" style="width:100%;height:100%">
+          <defs><radialGradient id="g2" cx="40%" cy="30%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#e8f7ff"/></radialGradient></defs>
+          <g>
+            <path d="M30 70 Q30 30 70 24 Q100 18 130 24 Q170 30 170 70 Q170 110 160 126 Q150 142 140 140 Q130 138 120 146 Q110 154 100 146 Q90 138 80 142 Q70 146 60 142 Q50 138 40 126 Q30 110 30 70 Z" fill="url(#g2)" stroke="#ffffff33" stroke-width="1.2" />
+            <ellipse cx="80" cy="82" rx="8" ry="12" fill="#0a0a0a" />
+            <ellipse cx="120" cy="82" rx="8" ry="12" fill="#0a0a0a" />
+            <path d="M78 118 Q100 136 122 118" stroke="#0a0a0a" stroke-width="6" stroke-linecap="round" fill="none" stroke-linejoin="round"/>
+          </g>
+        </svg>
+      `;
+      overlay.classList.add('show');
+      // 音效（再播放一次）
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const g = ctx.createGain();
+        const o1 = ctx.createOscillator(); o1.type='sine'; o1.frequency.value=240;
+        const o2 = ctx.createOscillator(); o2.type='sawtooth'; o2.frequency.value=360;
+        o1.connect(g); o2.connect(g); g.connect(ctx.destination);
+        g.gain.value = 0.0001;
+        g.gain.linearRampToValueAtTime(0.16, ctx.currentTime + 0.01);
+        o1.start(); o2.start();
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.1);
+        o1.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 1.1);
+        o2.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 1.1);
+        setTimeout(()=>{ o1.stop(); o2.stop(); ctx.close(); }, 1300);
+      } catch(e){}
+    }
+
+    closeModal.addEventListener('click', ()=> overlay.classList.remove('show'));
+
+    // 點擊 / 鍵盤事件（同樣會在使用者互動流程中立即開新視窗）
+    gift.addEventListener('click', onOpenTriggered);
+    lid.addEventListener('click', onOpenTriggered);
+    scene.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        e.preventDefault();
+        onOpenTriggered();
+      }
+    });
+
+    gift.addEventListener('keyup', (e) => {
+      if (e.code === 'Space' || e.code === 'Enter') onOpenTriggered();
+    });
+
+    // 小提示動畫：載入時稍微抖動（純視覺）
+    setTimeout(()=> {
+      scene.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], { duration: 900, iterations: 1 });
+    }, 300);
+  </script>
+</body>
+</html>
