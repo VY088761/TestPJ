@@ -3,324 +3,141 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>放鞭炮 / 煙火 範例</title>
+  <title>點擊禮物盒 - 跳出鬼臉</title>
   <style>
-    html,body { height:100%; margin:0; background:#07020a; overflow:hidden; }
-    canvas { display:block; background: linear-gradient(#030012, #14021a 60%, #061018); }
-    .ui {
-      position: fixed;
-      left: 12px;
-      top: 12px;
-      color: #fff;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      z-index: 10;
-      user-select: none;
-      background: rgba(0,0,0,0.25);
-      padding: 8px 10px;
-      border-radius: 8px;
-      backdrop-filter: blur(4px);
+    :root{
+      --bg:#0b0720;
+      --box:#ff4d67;
+      --ribbon:#fff2f3;
+      --shadow: rgba(0,0,0,0.45);
     }
-    .btn {
-      background: linear-gradient(180deg,#ff6b3d,#ff3d3d);
-      color: #fff;
-      border: none;
-      padding: 6px 10px;
-      margin-left: 8px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
+    html,body{height:100%;margin:0;font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC";background:
+      radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,0.02), transparent),
+      linear-gradient(180deg,#050312 0%, #0b0720 60%); color:#fff;display:flex;align-items:center;justify-content:center;}
+    .wrap{display:flex;flex-direction:column;align-items:center;gap:18px}
+    .hint{font-size:18px;opacity:0.95}
+    .box-scene{width:220px;height:220px;position:relative;display:flex;align-items:flex-end;justify-content:center;cursor:pointer;user-select:none}
+    /* 禮物盒本體 */
+    .gift{
+      width:160px;height:120px;background:linear-gradient(180deg,var(--box), #b32a45);
+      border-radius:8px;position:relative;box-shadow:0 14px 30px var(--shadow), inset 0 -6px 12px rgba(0,0,0,0.15);
+      transform-origin:center bottom;transition:transform 420ms cubic-bezier(.2,.9,.2,1);
     }
-    .btn:active { transform: translateY(1px); }
-    small { color:#ddd; display:block; margin-top:6px; font-size:12px; opacity:0.9; }
+    /* 蓋子 */
+    .lid{
+      position:absolute;top:-24px;width:180px;height:36px;background:linear-gradient(180deg,#ff6d80,#b02a40);
+      border-radius:8px;left:50%;transform:translateX(-50%);box-shadow:0 8px 18px rgba(0,0,0,0.4);
+      transform-origin:center bottom;transition:transform 520ms cubic-bezier(.15,.9,.2,1);
+    }
+    /* 蝴蝶結 (簡單造型) */
+    .bow{
+      position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:84px;height:48px;
+      display:flex;align-items:center;justify-content:center;gap:6px;
+    }
+    .bow .knot{width:18px;height:18px;background:var(--ribbon);border-radius:4px;box-shadow:inset 0 -3px rgba(0,0,0,0.08)}
+    .bow .loop{width:30px;height:18px;background:linear-gradient(180deg,#fff,#ffd6db);border-radius:8px;transform:rotate(10deg)}
+    .bow .loop.right{transform:rotate(-10deg)}
+    /* 綁帶 */
+    .ribbon-vert{position:absolute;left:50%;top:0;bottom:0;width:18px;background:linear-gradient(180deg,#ffdfe6,#ffb6c7);transform:translateX(-50%);border-radius:6px}
+    .ribbon-horiz{position:absolute;top:36px;left:6px;right:6px;height:18px;background:linear-gradient(90deg,#ffdfe6,#ffb6c7);border-radius:6px}
+    /* 點擊時開蓋 */
+    .open .lid{transform: translateX(-50%) translateY(-40px) rotate(-12deg) scale(1.03);}
+    .open .gift{transform: translateY(6px) rotate(-1.5deg) scaleY(0.98);}
+    /* 小火花／confetti */
+    .confetti { position:absolute; inset:0; pointer-events:none; overflow:visible; }
+    .confetti .p { position:absolute; width:8px; height:12px; border-radius:2px; transform-origin:center; opacity:0; animation:burst 900ms forwards ease-out; }
+    @keyframes burst {
+      0% { opacity:1; transform:translateY(0) scale(1) rotate(0deg); }
+      100% { opacity:0; transform:translateY(-160px) translateX(var(--tx)) rotate(var(--rot)) scale(0.6); }
+    }
+    /* 模態覆蓋 (備援) */
+    .overlay { position:fixed; inset:0; display:flex;align-items:center;justify-content:center;background:rgba(3,2,10,0.65);backdrop-filter:blur(2px); visibility:hidden; opacity:0; transition:opacity .18s; z-index:40 }
+    .overlay.show { visibility:visible; opacity:1; }
+    .modal { width:min(520px,92vw); max-width:760px; background:linear-gradient(180deg,#0b0716,#120922); border-radius:12px; padding:28px; box-shadow:0 20px 60px rgba(3,2,10,0.7); color:#fff; display:flex;flex-direction:column;align-items:center; gap:14px; }
+    .close-btn{background:#ff6b6b;color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
+    /* 小提示文字 */
+    .small{font-size:13px;opacity:0.9}
+    /* 響應式調整 */
+    @media (max-width:420px){
+      .gift{width:140px;height:100px}
+      .lid{width:160px;height:32px}
+    }
   </style>
 </head>
 <body>
-  <div class="ui">
-    <span>點擊畫面放鞭炮 / 煙火</span>
-    <button id="autoBtn" class="btn">自動連放：關</button>
-    <small>（點擊或觸碰任何位置發射；按按鈕開自動模式）</small>
+  <div class="wrap">
+    <div class="hint">點擊禮物盒看看有什麼驚喜！</div>
+
+    <div id="scene" class="box-scene" aria-hidden="false" title="點擊我">
+      <div class="confetti" id="confetti"></div>
+
+      <div id="lid" class="lid" aria-hidden="true">
+        <div class="bow" aria-hidden="true">
+          <div class="loop"></div>
+          <div class="knot"></div>
+          <div class="loop right"></div>
+        </div>
+      </div>
+
+      <div id="gift" class="gift" role="button" tabindex="0" aria-label="禮物盒"></div>
+
+      <div class="ribbon-vert" aria-hidden="true"></div>
+      <div class="ribbon-horiz" aria-hidden="true"></div>
+    </div>
+
+    <div class="small">（或按鍵盤空白鍵 / Enter）</div>
   </div>
-  <canvas id="c"></canvas>
+
+  <!-- 模態備援 -->
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true">
+    <div class="modal" id="modalContent">
+      <div id="ghostContainer" style="width:320px;height:320px;display:flex;align-items:center;justify-content:center"></div>
+      <button class="close-btn" id="closeModal">關閉</button>
+    </div>
+  </div>
 
   <script>
-    // 基本畫布設定
-    const canvas = document.getElementById('c');
-    const ctx = canvas.getContext('2d', { alpha: false });
+    const scene = document.getElementById('scene');
+    const gift = document.getElementById('gift');
+    const lid = document.getElementById('lid');
+    const confettiRoot = document.getElementById('confetti');
 
-    function resize() {
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = Math.max(800, innerWidth) * dpr;
-      canvas.height = Math.max(600, innerHeight) * dpr;
-      canvas.style.width = innerWidth + 'px';
-      canvas.style.height = innerHeight + 'px';
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    addEventListener('resize', resize);
-    resize();
-
-    // 粒子 / 鞭炮 系統
-    const fireworks = []; // 上升的鞭炮（有 fuse）
-    const particles = []; // 爆炸後的粒子
-    const sparks = []; // 鞭炮上升過程的小火花
-
-    // 工具 - 隨機
-    function rand(min, max) { return Math.random() * (max - min) + min; }
-    function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
-
-    // 顏色組合（煙火顏色）
-    const COLORS = [
-      '#ff3d3d', '#ffae3d', '#ffd93d', '#8cff3d', '#3dffea',
-      '#3da6ff', '#9b3dff', '#ff3dd9', '#ffffff', '#ffd1ff'
-    ];
-
-    // Firecracker class: 上升的鞭炮/煙火發射器
-    class Firecracker {
-      constructor(x, y, targetY, color) {
-        this.x = x;
-        this.y = y;
-        this.vx = rand(-0.6, 0.6);
-        this.vy = rand(-8.5, -10.5); // 向上速度
-        this.ax = 0;
-        this.ay = 0.12; // 重力
-        this.radius = 5;
-        this.fuse = rand(45, 70); // 時間到就爆炸（框架數）
-        this.color = color || COLORS[randInt(0, COLORS.length - 1)];
-        this.exploded = false;
-        this.targetY = targetY || rand(120, canvas.height * 0.25);
-      }
-
-      update() {
-        this.vx += this.ax;
-        this.vy += this.ay;
-        this.x += this.vx;
-        this.y += this.vy;
-
-        // 產生上升火花
-        if (Math.random() < 0.5) {
-          sparks.push(new Spark(this.x + rand(-2, 2), this.y + rand(2, 4), this.color));
-        }
-
-        // 當到達目標高度或 fuse 完成，爆炸
-        this.fuse -= 1;
-        if (this.fuse <= 0 || this.y <= this.targetY) {
-          this.explode();
-          this.exploded = true;
-        }
-      }
-
-      explode() {
-        // 產生多個粒子
-        const count = randInt(30, 90);
-        const hue = this.color;
-        for (let i = 0; i < count; i++) {
-          const speed = rand(1, 6);
-          const angle = rand(0, Math.PI * 2);
-          const vx = Math.cos(angle) * speed;
-          const vy = Math.sin(angle) * speed;
-          particles.push(new Particle(this.x, this.y, vx, vy, hue));
-        }
-        // 連帶一些大亮點
-        for (let i = 0; i < 6; i++) {
-          const speed = rand(2, 9);
-          const angle = rand(0, Math.PI * 2);
-          particles.push(new Particle(this.x, this.y, Math.cos(angle) * speed, Math.sin(angle) * speed, '#fff', 3.5, 120));
-        }
-      }
-
-      draw(ctx) {
-        // 畫一個小長條代表鞭炮筒
-        ctx.save();
-        ctx.beginPath();
-        ctx.fillStyle = this.color;
-        ctx.strokeStyle = '#220000';
-        ctx.lineWidth = 1.5;
-        ctx.translate(this.x, this.y);
-        ctx.rotate(Math.atan2(this.vy, this.vx) + Math.PI / 2);
-        ctx.fillRect(-3, -8, 6, 12);
-        ctx.strokeRect(-3, -8, 6, 12);
-        ctx.restore();
-
-        // 一點光暈
-        ctx.beginPath();
-        const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, 22);
-        g.addColorStop(0, hexToRgba(this.color, 0.22));
-        g.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = g;
-        ctx.fillRect(this.x - 22, this.y - 22, 44, 44);
+    // 產生 confetti 元素
+    function spawnConfetti(xOrigin = 80, count = 18) {
+      const colors = ['#ffd166','#ef476f','#06d6a0','#118ab2','#f72585'];
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'p';
+        p.style.background = colors[Math.floor(Math.random()*colors.length)];
+        const tx = (Math.random()*260 - 130) + 'px';
+        p.style.setProperty('--tx', tx);
+        p.style.setProperty('--rot', (Math.random()*720 - 360) + 'deg');
+        p.style.left = (80 + (Math.random()*40-20)) + 'px';
+        p.style.top = (60 + Math.random()*30) + 'px';
+        p.style.transform = `translateZ(0)`;
+        confettiRoot.appendChild(p);
+        // 移除
+        setTimeout(()=> p.remove(), 1200 + Math.random()*600);
       }
     }
 
-    // Small spark along fuse
-    class Spark {
-      constructor(x, y, color) {
-        this.x = x; this.y = y;
-        this.vx = rand(-0.6, 0.6); this.vy = rand(-0.3, 0.8);
-        this.life = randInt(8, 18);
-        this.color = color;
-        this.age = 0;
-      }
-      update() {
-        this.vy += 0.06;
-        this.x += this.vx;
-        this.y += this.vy;
-        this.age++;
-      }
-      draw(ctx) {
-        const t = 1 - this.age / this.life;
-        ctx.beginPath();
-        ctx.fillStyle = hexToRgba(this.color, Math.max(0.02, 0.55 * t));
-        ctx.fillRect(this.x - 1, this.y - 1, 2, 2);
-      }
+    // WebAudio 簡單打擊音（用於禮物打開）
+    function playPopAudio() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(420, ctx.currentTime);
+        o.connect(g);
+        g.connect(ctx.destination);
+        g.gain.setValueAtTime(0, ctx.currentTime);
+        g.gain.linearRampToValueAtTime(0.14, ctx.currentTime + 0.01);
+        o.start();
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+        o.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 0.45);
+        setTimeout(()=>{ o.stop(); ctx.close(); }, 600);
+      } catch(e){ /* ignore */ }
     }
 
-    // Particle: 爆炸粒子
-    class Particle {
-      constructor(x, y, vx, vy, color, size = 2.5, life = null) {
-        this.x = x; this.y = y;
-        this.vx = vx; this.vy = vy;
-        this.ax = 0; this.ay = 0.04; // gravity
-        this.size = size;
-        this.color = color;
-        this.life = life || randInt(60, 110);
-        this.age = 0;
-        this.fade = rand(0.005, 0.02);
-        this.shrink = rand(0.985, 0.995);
-      }
-      update() {
-        this.vx *= 0.998;
-        this.vy *= 0.998;
-        this.vy += this.ay;
-        this.x += this.vx;
-        this.y += this.vy;
-        this.age++;
-        this.size *= this.shrink;
-      }
-      draw(ctx) {
-        const alpha = Math.max(0, 1 - this.age / this.life);
-        // glow
-        const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, Math.max(8, this.size * 8));
-        g.addColorStop(0, hexToRgba(this.color, Math.min(0.9, alpha)));
-        g.addColorStop(0.4, hexToRgba(this.color, Math.min(0.45, alpha * 0.6)));
-        g.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, Math.max(1, this.size * 4), 0, Math.PI * 2);
-        ctx.fill();
-
-        // core dot
-        ctx.beginPath();
-        ctx.fillStyle = hexToRgba(this.color, Math.min(1, alpha * 1.2));
-        ctx.arc(this.x, this.y, Math.max(0.6, this.size), 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // 小工具：十六進位顏色轉 rgba 字串
-    function hexToRgba(hex, a = 1) {
-      const c = hex.replace('#','');
-      const bigint = parseInt(c, 16);
-      const r = (bigint >> 16) & 255;
-      const g = (bigint >> 8) & 255;
-      const b = bigint & 255;
-      return `rgba(${r},${g},${b},${a})`;
-    }
-
-    // 主迴圈
-    function loop() {
-      // 半透明黑色覆蓋做拖影（可調製造不同尾跡）
-      ctx.fillStyle = 'rgba(3,2,8,0.25)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // 更新並畫 sparks
-      for (let i = sparks.length - 1; i >= 0; i--) {
-        let s = sparks[i];
-        s.update();
-        s.draw(ctx);
-        if (s.age >= s.life) sparks.splice(i, 1);
-      }
-
-      // 更新並畫 fireworks（上升鞭炮）
-      for (let i = fireworks.length - 1; i >= 0; i--) {
-        const f = fireworks[i];
-        f.update();
-        f.draw(ctx);
-        if (f.exploded) fireworks.splice(i, 1);
-      }
-
-      // 更新並畫 particles
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.update();
-        p.draw(ctx);
-        if (p.age >= p.life || p.size < 0.15) particles.splice(i, 1);
-      }
-
-      requestAnimationFrame(loop);
-    }
-    requestAnimationFrame(loop);
-
-    // 互動：點擊或觸碰發射
-    function launchAt(x, y) {
-      // 從底部發射向 click 的方向： spawn x 以點擊 x 為準，y 從底部
-      const startX = x;
-      const startY = canvas.height - 10;
-      const targetY = y; // 目標高度為點擊高度
-      const color = COLORS[randInt(0, COLORS.length - 1)];
-      fireworks.push(new Firecracker(startX, startY, targetY, color));
-    }
-
-    // 支援 mouse & touch
-    let lastTap = 0;
-    function handlePointer(clientX, clientY) {
-      // 將客戶端座標轉為 canvas 空間（已使用 css 寬度）
-      const rect = canvas.getBoundingClientRect();
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
-      launchAt(x, y);
-    }
-
-    window.addEventListener('pointerdown', (e) => {
-      handlePointer(e.clientX, e.clientY);
-    });
-
-    // 自動連放模式（每隔一段時間自動發射）
-    let autoMode = false;
-    const autoBtn = document.getElementById('autoBtn');
-    let autoTimer = null;
-    autoBtn.addEventListener('click', () => {
-      autoMode = !autoMode;
-      autoBtn.textContent = `自動連放：${autoMode ? '開' : '關'}`;
-      if (autoMode) {
-        autoTimer = setInterval(() => {
-          const x = rand(60, innerWidth - 60);
-          const y = rand(80, innerHeight * 0.35);
-          launchAt(x, y);
-        }, 450);
-      } else {
-        clearInterval(autoTimer);
-        autoTimer = null;
-      }
-    });
-
-    // 初始化：在底部間隔些許鞭炮
-    function initPreset() {
-      const base = innerWidth / 2;
-      for (let i = -2; i <= 2; i++) {
-        setTimeout(() => {
-          launchAt(base + i * 50, rand(80, innerHeight * 0.25));
-        }, 300 + i * 50 + Math.random() * 400);
-      }
-    }
-    initPreset();
-
-    // 小提示：允許鍵盤空白鍵發射
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') {
-        const x = rand(80, innerWidth - 80);
-        const y = rand(60, innerHeight * 0.3);
-        launchAt(x, y);
-      }
-    });
-  </script>
-</body>
-</html>
+    // 生成鬼臉頁面內容字串*
