@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>點一下</title>
+    <title>拳擊遊戲</title>
     <style>
         * {
             margin: 0;
@@ -321,7 +321,7 @@
             <div class="title">🥊 拳擊遊戲</div>
             <div class="hp-container">
                 <div class="hp-label">
-                    <span>大魔王血量</span>
+                    <span>打靶血量</span>
                     <span id="hpText">100 / 100</span>
                 </div>
                 <div class="hp-bar-background">
@@ -342,17 +342,17 @@
         </div>
 
         <div class="upload-section">
-            <label for="photoUpload">上傳魔王照片</label>
+            <label for="photoUpload">上傳打靶貼紙</label>
             <input type="file" id="photoUpload" accept="image/*">
-            <button id="uploadBtn">更新頭像</button>
+            <button id="uploadBtn">更新貼紙</button>
         </div>
 
         <div class="instruction">
             <h3>💡 遊戲說明</h3>
-            <p>✓ 上傳魔王照片人</p>
-            <p>✓ 點擊畫面進行攻擊</p>
-            <p>✓ 打到魔王才會扣血</p>
-            <p>✓ 擊敗魔王即勝利</p>
+            <p>✓ 上傳圖片貼在打靶</p>
+            <p>✓ 點擊打靶進行攻擊</p>
+            <p>✓ 打靶會做出反應</p>
+            <p>✓ 將血量打到0即勝利</p>
         </div>
 
         <div class="combo-display" id="comboDisplay"></div>
@@ -382,37 +382,41 @@
             lastComboTime: 0,
             comboTimeout: 2000,
             isVictory: false,
-            dummy: {
+            bag: {
                 x: canvas.width / 2,
                 y: canvas.height / 2,
-                headRadius: 60,
-                bodyWidth: 80,
-                bodyHeight: 120,
-                bodyX: canvas.width / 2 - 40,
-                bodyY: canvas.height / 2 + 80,
+                width: 100,
+                height: 150,
+                radius: 50,
                 hitCooldown: 0,
                 shakeIntensity: 0,
                 reactionTime: 0,
-                reactionType: null,
+                reactionDirection: 0,
+                swingAngle: 0,
+                targetSwingAngle: 0,
                 image: null
             },
-            leftFist: {
-                x: canvas.width / 4,
-                y: canvas.height / 2 + 100,
-                radius: 25,
-                targetX: canvas.width / 4,
-                targetY: canvas.height / 2 + 100,
+            leftGlove: {
+                x: canvas.width / 4 - 50,
+                y: canvas.height / 2 + 150,
+                width: 35,
+                height: 45,
+                targetX: canvas.width / 4 - 50,
+                targetY: canvas.height / 2 + 150,
                 isAttacking: false,
-                attackCooldown: 0
+                attackCooldown: 0,
+                angle: 0
             },
-            rightFist: {
-                x: canvas.width * 3 / 4,
-                y: canvas.height / 2 + 100,
-                radius: 25,
-                targetX: canvas.width * 3 / 4,
-                targetY: canvas.height / 2 + 100,
+            rightGlove: {
+                x: canvas.width * 3 / 4 + 50,
+                y: canvas.height / 2 + 150,
+                width: 35,
+                height: 45,
+                targetX: canvas.width * 3 / 4 + 50,
+                targetY: canvas.height / 2 + 150,
                 isAttacking: false,
-                attackCooldown: 0
+                attackCooldown: 0,
+                angle: 0
             }
         };
 
@@ -432,7 +436,7 @@
                     const img = new Image();
                     img.onload = () => {
                         uploadedImage = img;
-                        game.dummy.image = img;
+                        game.bag.image = img;
                     };
                     img.src = event.target.result;
                 };
@@ -442,7 +446,7 @@
 
         document.getElementById('uploadBtn').addEventListener('click', () => {
             if (uploadedImage) {
-                game.dummy.image = uploadedImage;
+                game.bag.image = uploadedImage;
             }
         });
 
@@ -454,72 +458,70 @@
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
 
-            // 決定使用左拳或右拳
-            const leftDist = Math.hypot(clickX - game.leftFist.x, clickY - game.leftFist.y);
-            const rightDist = Math.hypot(clickX - game.rightFist.x, clickY - game.rightFist.y);
+            // 檢查是否點擊到打靶
+            const bag = game.bag;
+            const distX = clickX - bag.x;
+            const distY = clickY - bag.y;
+            const distance = Math.hypot(distX, distY);
 
-            if (leftDist <= rightDist) {
-                attackWithFist(game.leftFist, clickX, clickY);
-            } else {
-                attackWithFist(game.rightFist, clickX, clickY);
+            // 只有點擊到打靶才能進行攻擊
+            if (distance < bag.radius + 30) {
+                // 決定使用左拳套或右拳套
+                const leftDist = Math.hypot(clickX - game.leftGlove.targetX, clickY - game.leftGlove.targetY);
+                const rightDist = Math.hypot(clickX - game.rightGlove.targetX, clickY - game.rightGlove.targetY);
+
+                if (leftDist <= rightDist) {
+                    attackWithGlove(game.leftGlove, clickX, clickY);
+                } else {
+                    attackWithGlove(game.rightGlove, clickX, clickY);
+                }
             }
         });
 
-        // 拳擊攻擊函數
-        function attackWithFist(fist, targetX, targetY) {
-            if (fist.attackCooldown > 0) return;
+        // 拳套攻擊函數
+        function attackWithGlove(glove, targetX, targetY) {
+            if (glove.attackCooldown > 0) return;
 
-            fist.isAttacking = true;
-            fist.targetX = targetX;
-            fist.targetY = targetY;
-            fist.attackCooldown = 400;
+            glove.isAttacking = true;
+            glove.targetX = targetX;
+            glove.targetY = targetY;
+            glove.attackCooldown = 400;
 
-            // 檢查是否打到假人
-            checkHit(fist, targetX, targetY);
+            // 檢查是否打到打靶
+            checkHit(glove, targetX, targetY);
         }
 
-        // 檢查是否打中假人
-        function checkHit(fist, targetX, targetY) {
-            const dummy = game.dummy;
+        // 檢查是否打中打靶
+        function checkHit(glove, targetX, targetY) {
+            const bag = game.bag;
             
-            // 檢查是否打到頭部
-            const headDist = Math.hypot(targetX - dummy.x, targetY - dummy.y);
+            // 檢查是否打到打靶
+            const distX = targetX - bag.x;
+            const distY = targetY - bag.y;
+            const distance = Math.hypot(distX, distY);
             
-            if (headDist < dummy.headRadius + fist.radius) {
-                dealDamage(targetX, targetY, 15, 'head');
-            } 
-            // 檢查是否打到身體
-            else if (
-                targetX > dummy.bodyX - dummy.bodyWidth / 2 &&
-                targetX < dummy.bodyX + dummy.bodyWidth / 2 &&
-                targetY > dummy.bodyY &&
-                targetY < dummy.bodyY + dummy.bodyHeight
-            ) {
-                dealDamage(targetX, targetY, 10, 'body');
+            if (distance < bag.radius + 30) {
+                const damage = Math.floor(Math.random() * 8) + 12; // 12-20傷害
+                dealDamage(targetX, targetY, damage);
             }
         }
 
         // 造成傷害
-        function dealDamage(x, y, damage, bodyPart) {
-            if (game.dummy.hitCooldown > 0) return;
+        function dealDamage(x, y, damage) {
+            if (game.bag.hitCooldown > 0) return;
 
-            game.dummy.hitCooldown = 300;
+            game.bag.hitCooldown = 300;
             game.currentHP = Math.max(0, game.currentHP - damage);
             game.totalDamage += damage;
             game.combo++;
             game.lastComboTime = Date.now();
 
             // 震動效果
-            game.dummy.shakeIntensity = 10;
+            game.bag.shakeIntensity = 15;
 
-            // 反應效果
-            if (bodyPart === 'head') {
-                game.dummy.reactionType = 'head';
-                game.dummy.reactionTime = 300;
-            } else {
-                game.dummy.reactionType = 'body';
-                game.dummy.reactionTime = 200;
-            }
+            // 搖晃反應
+            game.bag.reactionDirection = Math.random() > 0.5 ? 1 : -1;
+            game.bag.reactionTime = 400;
 
             // 顯示傷害數字
             showDamageNumber(x, y, damage);
@@ -543,8 +545,6 @@
 
         // 顯示傷害數字
         function showDamageNumber(x, y, damage) {
-            const damageText = damage.toString();
-            // 動畫由CSS處理，這裡只需在動畫完成後清理
             const tempDiv = document.createElement('div');
             tempDiv.className = 'damage-number';
             tempDiv.textContent = damage;
@@ -557,7 +557,7 @@
 
         // 顯示血濺效果
         function showBloodSplat(x, y) {
-            const splats = ['💥', '💢', '🩸'];
+            const splats = ['💥', '💢', '🔴'];
             const splat = splats[Math.floor(Math.random() * splats.length)];
             
             const tempDiv = document.createElement('div');
@@ -611,24 +611,28 @@
             game.lastComboTime = 0;
             game.isVictory = false;
 
-            game.dummy.hitCooldown = 0;
-            game.dummy.shakeIntensity = 0;
-            game.dummy.reactionTime = 0;
-            game.dummy.reactionType = null;
+            game.bag.hitCooldown = 0;
+            game.bag.shakeIntensity = 0;
+            game.bag.reactionTime = 0;
+            game.bag.reactionDirection = 0;
+            game.bag.swingAngle = 0;
+            game.bag.targetSwingAngle = 0;
 
-            game.leftFist.attackCooldown = 0;
-            game.leftFist.isAttacking = false;
-            game.leftFist.x = canvas.width / 4;
-            game.leftFist.y = canvas.height / 2 + 100;
-            game.leftFist.targetX = game.leftFist.x;
-            game.leftFist.targetY = game.leftFist.y;
+            game.leftGlove.attackCooldown = 0;
+            game.leftGlove.isAttacking = false;
+            game.leftGlove.x = canvas.width / 4 - 50;
+            game.leftGlove.y = canvas.height / 2 + 150;
+            game.leftGlove.targetX = game.leftGlove.x;
+            game.leftGlove.targetY = game.leftGlove.y;
+            game.leftGlove.angle = 0;
 
-            game.rightFist.attackCooldown = 0;
-            game.rightFist.isAttacking = false;
-            game.rightFist.x = canvas.width * 3 / 4;
-            game.rightFist.y = canvas.height / 2 + 100;
-            game.rightFist.targetX = game.rightFist.x;
-            game.rightFist.targetY = game.rightFist.y;
+            game.rightGlove.attackCooldown = 0;
+            game.rightGlove.isAttacking = false;
+            game.rightGlove.x = canvas.width * 3 / 4 + 50;
+            game.rightGlove.y = canvas.height / 2 + 150;
+            game.rightGlove.targetX = game.rightGlove.x;
+            game.rightGlove.targetY = game.rightGlove.y;
+            game.rightGlove.angle = 0;
 
             document.getElementById('victoryModal').style.display = 'none';
             updateHPBar();
@@ -647,184 +651,173 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // 更新冷卻時間
-            if (game.dummy.hitCooldown > 0) game.dummy.hitCooldown--;
-            if (game.dummy.reactionTime > 0) game.dummy.reactionTime--;
-            if (game.dummy.shakeIntensity > 0) game.dummy.shakeIntensity *= 0.9;
-            if (game.leftFist.attackCooldown > 0) game.leftFist.attackCooldown--;
-            if (game.rightFist.attackCooldown > 0) game.rightFist.attackCooldown--;
+            if (game.bag.hitCooldown > 0) game.bag.hitCooldown--;
+            if (game.bag.reactionTime > 0) game.bag.reactionTime--;
+            if (game.bag.shakeIntensity > 0) game.bag.shakeIntensity *= 0.9;
+            if (game.leftGlove.attackCooldown > 0) game.leftGlove.attackCooldown--;
+            if (game.rightGlove.attackCooldown > 0) game.rightGlove.attackCooldown--;
 
-            // 更新拳頭位置
-            updateFist(game.leftFist);
-            updateFist(game.rightFist);
+            // 更新打靶搖晃
+            if (game.bag.reactionTime > 0) {
+                game.bag.targetSwingAngle = Math.sin(Date.now() / 50) * 15 * game.bag.reactionDirection;
+            } else {
+                game.bag.targetSwingAngle = 0;
+            }
+            game.bag.swingAngle += (game.bag.targetSwingAngle - game.bag.swingAngle) * 0.1;
+
+            // 更新拳套位置
+            updateGlove(game.leftGlove);
+            updateGlove(game.rightGlove);
 
             // 繪製背景
             drawBackground();
 
-            // 繪製假人
-            drawDummy();
+            // 繪製打靶
+            drawBag();
 
-            // 繪製拳頭
-            drawFist(game.leftFist);
-            drawFist(game.rightFist);
+            // 繪製拳套
+            drawGlove(game.leftGlove);
+            drawGlove(game.rightGlove);
 
             requestAnimationFrame(gameLoop);
         }
 
-        // 更新拳頭
-        function updateFist(fist) {
-            const speed = 15;
-            const dx = fist.targetX - fist.x;
-            const dy = fist.targetY - fist.y;
+        // 更新拳套
+        function updateGlove(glove) {
+            const speed = 18;
+            const dx = glove.targetX - glove.x;
+            const dy = glove.targetY - glove.y;
             const dist = Math.hypot(dx, dy);
 
             if (dist > speed) {
-                fist.x += (dx / dist) * speed;
-                fist.y += (dy / dist) * speed;
+                glove.x += (dx / dist) * speed;
+                glove.y += (dy / dist) * speed;
+                
+                // 計算角度
+                glove.angle = Math.atan2(dy, dx);
             } else {
-                fist.x = fist.targetX;
-                fist.y = fist.targetY;
-                fist.isAttacking = false;
+                glove.x = glove.targetX;
+                glove.y = glove.targetY;
+                glove.isAttacking = false;
             }
         }
 
-        // 繪製拳頭
-        function drawFist(fist) {
+        // 繪製拳套
+        function drawGlove(glove) {
             ctx.save();
 
-            // 應用震動效果
-            if (game.dummy.shakeIntensity > 0) {
-                ctx.translate(
-                    (Math.random() - 0.5) * game.dummy.shakeIntensity,
-                    (Math.random() - 0.5) * game.dummy.shakeIntensity
-                );
-            }
+            ctx.translate(glove.x, glove.y);
+            ctx.rotate(glove.angle);
 
-            // 繪製拳頭
-            ctx.fillStyle = '#D2B48C';
-            ctx.beginPath();
-            ctx.arc(fist.x, fist.y, fist.radius, 0, Math.PI * 2);
-            ctx.fill();
+            // 拳套主體（紅色）
+            ctx.fillStyle = '#DC143C';
+            ctx.fillRect(0, -glove.height / 2, glove.width, glove.height);
 
-            // 繪製拳頭邊界
-            ctx.strokeStyle = '#8B4513';
+            // 拳套邊框
+            ctx.strokeStyle = '#8B0000';
             ctx.lineWidth = 2;
-            ctx.stroke();
+            ctx.strokeRect(0, -glove.height / 2, glove.width, glove.height);
 
-            // 繪製指關節
-            ctx.fillStyle = '#A0826D';
-            for (let i = 0; i < 4; i++) {
-                const angle = (i / 4) * Math.PI * 2;
-                const x = fist.x + Math.cos(angle) * (fist.radius - 8);
-                const y = fist.y + Math.sin(angle) * (fist.radius - 8);
-                ctx.beginPath();
-                ctx.arc(x, y, 4, 0, Math.PI * 2);
-                ctx.fill();
-            }
+            // 拳套墊片
+            ctx.fillStyle = '#FF6347';
+            ctx.fillRect(2, -glove.height / 2 + 2, glove.width - 4, glove.height / 3);
+            ctx.fillRect(2, glove.height / 2 - glove.height / 3, glove.width - 4, glove.height / 3);
+
+            // 拳套指部
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(glove.width - 8, -glove.height / 3, 8, glove.height * 2 / 3);
+
+            // 拳套袖口
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(-5, -glove.height / 2 - 10, glove.width + 10, 10);
 
             ctx.restore();
         }
 
-        // 繪製假人
-        function drawDummy() {
+        // 繪製打靶
+        function drawBag() {
             ctx.save();
 
+            const bag = game.bag;
+
             // 應用震動效果
-            if (game.dummy.shakeIntensity > 0) {
+            if (bag.shakeIntensity > 0) {
                 ctx.translate(
-                    (Math.random() - 0.5) * game.dummy.shakeIntensity,
-                    (Math.random() - 0.5) * game.dummy.shakeIntensity
+                    (Math.random() - 0.5) * bag.shakeIntensity,
+                    (Math.random() - 0.5) * bag.shakeIntensity
                 );
             }
 
-            const dummy = game.dummy;
+            // 應用搖晃效果
+            ctx.translate(bag.x, bag.y);
+            ctx.rotate((bag.swingAngle * Math.PI) / 180);
+            ctx.translate(-bag.x, -bag.y);
 
-            // 繪製身體
-            ctx.fillStyle = '#FF6347';
-            ctx.fillRect(
-                dummy.bodyX - dummy.bodyWidth / 2,
-                dummy.bodyY,
-                dummy.bodyWidth,
-                dummy.bodyHeight
-            );
+            // 繪製吊繩
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(bag.x, bag.y - bag.radius - 30);
+            ctx.lineTo(bag.x, bag.y - bag.radius - 80);
+            ctx.stroke();
 
-            // 繪製腿
-            ctx.fillStyle = '#333';
-            ctx.fillRect(dummy.bodyX - 20, dummy.bodyY + dummy.bodyHeight, 15, 60);
-            ctx.fillRect(dummy.bodyX + 5, dummy.bodyY + dummy.bodyHeight, 15, 60);
+            // 繪製打靶主體（圓柱形）
+            // 上部分（圓形）
+            const gradient = ctx.createRadialGradient(bag.x - 20, bag.y - 30, 0, bag.x, bag.y, bag.radius);
+            gradient.addColorStop(0, '#FFD700');
+            gradient.addColorStop(0.7, '#FFA500');
+            gradient.addColorStop(1, '#FF8C00');
 
-            // 繪製頭部（使用上傳的圖片或預設）
-            if (dummy.image) {
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(bag.x, bag.y, bag.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 打靶邊框
+            ctx.strokeStyle = '#8B4513';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(bag.x, bag.y, bag.radius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 繪製上傳的圖片
+            if (bag.image) {
                 ctx.save();
                 ctx.beginPath();
-                ctx.arc(dummy.x, dummy.y, dummy.headRadius, 0, Math.PI * 2);
+                ctx.arc(bag.x, bag.y, bag.radius - 5, 0, Math.PI * 2);
                 ctx.clip();
                 ctx.drawImage(
-                    dummy.image,
-                    dummy.x - dummy.headRadius,
-                    dummy.y - dummy.headRadius,
-                    dummy.headRadius * 2,
-                    dummy.headRadius * 2
+                    bag.image,
+                    bag.x - (bag.radius - 5),
+                    bag.y - (bag.radius - 5),
+                    (bag.radius - 5) * 2,
+                    (bag.radius - 5) * 2
                 );
                 ctx.restore();
-            } else {
-                ctx.fillStyle = '#FFD7B5';
-                ctx.beginPath();
-                ctx.arc(dummy.x, dummy.y, dummy.headRadius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = '#8B4513';
+            }
+
+            // 繪製打靶細節（同心圓）
+            if (!bag.image) {
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
                 ctx.lineWidth = 2;
-                ctx.stroke();
+                
+                for (let r = bag.radius / 2; r > 0; r -= bag.radius / 6) {
+                    ctx.beginPath();
+                    ctx.arc(bag.x, bag.y, r, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
             }
 
-            // 繪製眼睛
-            drawEye(dummy.x - 25, dummy.y - 20, dummy.reactionType === 'head');
-            drawEye(dummy.x + 25, dummy.y - 20, dummy.reactionType === 'head');
+            // 繪製打靶底部（矩形）
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(bag.x - 60, bag.y + bag.radius, 120, 20);
 
-            // 繪製嘴巴
-            ctx.strokeStyle = '#333';
+            // 底部邊框
+            ctx.strokeStyle = '#654321';
             ctx.lineWidth = 2;
-            ctx.beginPath();
-            if (dummy.reactionType === 'head') {
-                ctx.arc(dummy.x, dummy.y + 20, 15, 0, Math.PI);
-            } else {
-                ctx.arc(dummy.x, dummy.y + 15, 10, 0, Math.PI);
-            }
-            ctx.stroke();
+            ctx.strokeRect(bag.x - 60, bag.y + bag.radius, 120, 20);
 
             ctx.restore();
-        }
-
-        // 繪製眼睛
-        function drawEye(x, y, isHit) {
-            const dummy = game.dummy;
-
-            // 眼白
-            ctx.fillStyle = 'white';
-            ctx.beginPath();
-            ctx.arc(x, y, 12, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 瞳孔
-            ctx.fillStyle = '#333';
-            let pupilX = x;
-            let pupilY = y;
-
-            if (isHit) {
-                // 被打到時的反應
-                pupilX = x + (Math.random() - 0.5) * 8;
-                pupilY = y + (Math.random() - 0.5) * 8;
-            }
-
-            ctx.beginPath();
-            ctx.arc(pupilX, pupilY, 6, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 眼睛邊框
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(x, y, 12, 0, Math.PI * 2);
-            ctx.stroke();
         }
 
         // 繪製背景
@@ -838,27 +831,32 @@
             // 繪製拳擊台
             ctx.fillStyle = 'rgba(139, 69, 19, 0.3)';
             ctx.fillRect(
-                canvas.width / 2 - 300,
+                canvas.width / 2 - 350,
                 canvas.height / 2 + 250,
-                600,
-                100
+                700,
+                120
             );
 
             // 繪製台邊框
             ctx.strokeStyle = '#8B4513';
             ctx.lineWidth = 3;
             ctx.strokeRect(
-                canvas.width / 2 - 300,
+                canvas.width / 2 - 350,
                 canvas.height / 2 + 250,
-                600,
-                100
+                700,
+                120
             );
 
             // 繪製聚光燈
             ctx.fillStyle = 'rgba(255, 255, 0, 0.05)';
             ctx.beginPath();
-            ctx.arc(canvas.width / 2, canvas.height / 2, 200, 0, Math.PI * 2);
+            ctx.arc(canvas.width / 2, canvas.height / 2, 250, 0, Math.PI * 2);
             ctx.fill();
+
+            // 繪製繩柱
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(canvas.width / 2 - 400, canvas.height / 2 - 150, 30, 500);
+            ctx.fillRect(canvas.width / 2 + 370, canvas.height / 2 - 150, 30, 500);
         }
 
         // 啟動遊戲循環
