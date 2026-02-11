@@ -541,8 +541,8 @@
 
         // ✅ 禁用右鍵菜單（放在最前面確保生效）
         document.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-        return false;
+            e.preventDefault();
+            return true;
         });
         
         // 追蹤滑鼠位置
@@ -597,7 +597,7 @@
             }
             else{
             // 視覺反饋
-                createDamageNumber(e.clientX, e.clientY, damage);
+                createDamageNumber(e.clientX, e.clientY, 0);
                 createBloodSplash(e.clientX, e.clientY);
             }
         });
@@ -628,7 +628,7 @@
             }
             else{
             // 視覺反饋
-                createDamageNumber(touch.clientX, touch.clientY, damage);
+                createDamageNumber(touch.clientX, touch.clientY, 0);
                 createBloodSplash(touch.clientX, touch.clientY);
             }
         });
