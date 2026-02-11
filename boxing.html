@@ -539,6 +539,12 @@
         let mouseX = window.innerWidth / 2;
         let mouseY = window.innerHeight / 2;
 
+        // ✅ 禁用右鍵菜單（放在最前面確保生效）
+        document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+        });
+        
         // 追蹤滑鼠位置
         document.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
@@ -589,6 +595,11 @@
                 const damage = isHeadHit ? 15 : 10;
                 hitDummy(e.clientX, e.clientY, damage, isHeadHit);
             }
+            else{
+            // 視覺反饋
+                createDamageNumber(e.clientX, e.clientY, damage);
+                createBloodSplash(e.clientX, e.clientY);
+            }
         });
 
         // 觸摸點擊支持
@@ -614,6 +625,11 @@
             if (isHeadHit || isBodyHit) {
                 const damage = isHeadHit ? 15 : 10;
                 hitDummy(touch.clientX, touch.clientY, damage, isHeadHit);
+            }
+            else{
+            // 視覺反饋
+                createDamageNumber(touch.clientX, touch.clientY, damage);
+                createBloodSplash(touch.clientX, touch.clientY);
             }
         });
 
