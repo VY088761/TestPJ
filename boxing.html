@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拳擊遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(180deg, #333 0%, #1a1a1a 100%);
+        }
+
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .title {
+            font-size: 2em;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            color: #FF6347;
+        }
+
+        .hp-container {
+            flex: 1;
+            margin: 0 30px;
+            max-width: 400px;
+        }
+
+        .hp-label {
+            font-size: 1em;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .hp-bar-background {
+            width: 100%;
+            height: 30px;
+            background: #333;
+            border: 3px solid #666;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .hp-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #FF6347 0%, #FF4500 100%);
+            width: 100%;
+            border-radius: 12px;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 99, 71, 0.8);
+        }
+
+        .hp-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+            font-size: 1em;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        .game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+        }
+
+        .upload-section {
+            position: absolute;
+            top: 120px;
+            right: 20px;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #FF6347;
+        }
+
+        .upload-section label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            color: #FFD700;
+        }
+
+        .upload-section input[type="file"] {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 0.8em;
+        }
+
+        .upload-section button {
+            width: 100%;
+            padding: 8px;
+            background: linear-gradient(135deg, #FF6347 0%, #FF4500 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .upload-section button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 99, 71, 0.8);
+        }
+
+        .combo-display {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            display: none;
+            z-index: 50;
+            animation: popUp 0.5s ease-out;
+        }
+
+        @keyframes popUp {
+            0% {
+                transform: translateX(-50%) scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: translateX(-50%) scale(1.1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(-50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .victory-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 200;
+            display: none;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.8);
+            animation: victoryAppear 0.5s ease;
+            border: 3px solid #FF6347;
+        }
+
+        @keyframes victoryAppear {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .victory-modal h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .victory-modal p {
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        .victory-modal button {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #FF6347 0%, #FF4500 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .victory-modal button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 99, 71, 0.8);
+        }
+
+        .damage-number {
+            position: absolute;
+            color: #FF6347;
+            font-weight: bold;
+            font-size: 2em;
+            text-shadow: 0 0 10px rgba(255, 99, 71, 0.8);
+            pointer-events: none;
+            animation: floatUp 1s ease-out;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-50px) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        .hit-effect {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .blood-splat {
+            color: #FF0000;
+            font-size: 3em;
+            animation: splat 0.6s ease-out;
+        }
+
+        @keyframes splat {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+        }
+
+        .instruction {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #FFD700;
+            max-width: 300px;
+            font-size: 0.9em;
+            z-index: 50;
+        }
+
+        .instruction h3 {
+            color: #FFD700;
+            margin-bottom: 8px;
+        }
+
+        .instruction p {
+            color: #ccc;
+            margin: 3px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hud">
+            <div class="title">🥊 拳擊遊戲</div>
+            <div class="hp-container">
+                <div class="hp-label">
+                    <span>假人血量</span>
+                    <span id="hpText">100 / 100</span>
+                </div>
+                <div class="hp-bar-background">
+                    <div class="hp-bar" id="hpBar"></div>
+                    <div class="hp-percentage" id="hpPercent">100%</div>
+                </div>
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">連擊</div>
+                    <div class="stat-value" id="combo">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">總傷害</div>
+                    <div class="stat-value" id="totalDamage">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <label for="photoUpload">上傳假人照片</label>
+            <input type="file" id="photoUpload" accept="image/*">
+            <button id="uploadBtn">更新頭像</button>
+        </div>
+
+        <div class="instruction">
+            <h3>💡 遊戲說明</h3>
+            <p>✓ 上傳照片替換假人</p>
+            <p>✓ 點擊畫面進行攻擊</p>
+            <p>✓ 打到假人才會扣血</p>
+            <p>✓ 擊敗假人即勝利</p>
+        </div>
+
+        <div class="combo-display" id="comboDisplay"></div>
+
+        <canvas id="gameCanvas" class="game-canvas"></canvas>
+
+        <div class="victory-modal" id="victoryModal">
+            <h1>🎉 勝利！</h1>
+            <p>你成功擊敗了大魔王，你好棒</p>
+            <button id="confirmBtn">確認</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // 遊戲狀態
+        const game = {
+            maxHP: 100,
+            currentHP: 100,
+            combo: 0,
+            totalDamage: 0,
+            lastComboTime: 0,
+            comboTimeout: 2000,
+            isVictory: false,
+            dummy: {
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                headRadius: 60,
+                bodyWidth: 80,
+                bodyHeight: 120,
+                bodyX: canvas.width / 2 - 40,
+                bodyY: canvas.height / 2 + 80,
+                hitCooldown: 0,
+                shakeIntensity: 0,
+                reactionTime: 0,
+                reactionType: null,
+                image: null
+            },
+            leftFist: {
+                x: canvas.width / 4,
+                y: canvas.height / 2 + 100,
+                radius: 25,
+                targetX: canvas.width / 4,
+                targetY: canvas.height / 2 + 100,
+                isAttacking: false,
+                attackCooldown: 0
+            },
+            rightFist: {
+                x: canvas.width * 3 / 4,
+                y: canvas.height / 2 + 100,
+                radius: 25,
+                targetX: canvas.width * 3 / 4,
+                targetY: canvas.height / 2 + 100,
+                isAttacking: false,
+                attackCooldown: 0
+            }
+        };
+
+        // 更新畫布尺寸
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // 上傳照片
+        let uploadedImage = null;
+        document.getElementById('photoUpload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        uploadedImage = img;
+                        game.dummy.image = img;
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            if (uploadedImage) {
+                game.dummy.image = uploadedImage;
+            }
+        });
+
+        // 滑鼠點擊進行攻擊
+        canvas.addEventListener('click', (e) => {
+            if (game.isVictory) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            // 決定使用左拳或右拳
+            const leftDist = Math.hypot(clickX - game.leftFist.x, clickY - game.leftFist.y);
+            const rightDist = Math.hypot(clickX - game.rightFist.x, clickY - game.rightFist.y);
+
+            if (leftDist <= rightDist) {
+                attackWithFist(game.leftFist, clickX, clickY);
+            } else {
+                attackWithFist(game.rightFist, clickX, clickY);
+            }
+        });
+
+        // 拳擊攻擊函數
+        function attackWithFist(fist, targetX, targetY) {
+            if (fist.attackCooldown > 0) return;
+
+            fist.isAttacking = true;
+            fist.targetX = targetX;
+            fist.targetY = targetY;
+            fist.attackCooldown = 400;
+
+            // 檢查是否打到假人
+            checkHit(fist, targetX, targetY);
+        }
+
+        // 檢查是否打中假人
+        function checkHit(fist, targetX, targetY) {
+            const dummy = game.dummy;
+            
+            // 檢查是否打到頭部
+            const headDist = Math.hypot(targetX - dummy.x, targetY - dummy.y);
+            
+            if (headDist < dummy.headRadius + fist.radius) {
+                dealDamage(targetX, targetY, 15, 'head');
+            } 
+            // 檢查是否打到身體
+            else if (
+                targetX > dummy.bodyX - dummy.bodyWidth / 2 &&
+                targetX < dummy.bodyX + dummy.bodyWidth / 2 &&
+                targetY > dummy.bodyY &&
+                targetY < dummy.bodyY + dummy.bodyHeight
+            ) {
+                dealDamage(targetX, targetY, 10, 'body');
+            }
+        }
+
+        // 造成傷害
+        function dealDamage(x, y, damage, bodyPart) {
+            if (game.dummy.hitCooldown > 0) return;
+
+            game.dummy.hitCooldown = 300;
+            game.currentHP = Math.max(0, game.currentHP - damage);
+            game.totalDamage += damage;
+            game.combo++;
+            game.lastComboTime = Date.now();
+
+            // 震動效果
+            game.dummy.shakeIntensity = 10;
+
+            // 反應效果
+            if (bodyPart === 'head') {
+                game.dummy.reactionType = 'head';
+                game.dummy.reactionTime = 300;
+            } else {
+                game.dummy.reactionType = 'body';
+                game.dummy.reactionTime = 200;
+            }
+
+            // 顯示傷害數字
+            showDamageNumber(x, y, damage);
+
+            // 顯示血濺效果
+            showBloodSplat(x, y);
+
+            // 顯示連擊
+            if (game.combo > 1) {
+                showCombo();
+            }
+
+            // 更新UI
+            updateHPBar();
+
+            // 檢查勝利
+            if (game.currentHP <= 0) {
+                showVictory();
+            }
+        }
+
+        // 顯示傷害數字
+        function showDamageNumber(x, y, damage) {
+            const damageText = damage.toString();
+            // 動畫由CSS處理，這裡只需在動畫完成後清理
+            const tempDiv = document.createElement('div');
+            tempDiv.className = 'damage-number';
+            tempDiv.textContent = damage;
+            tempDiv.style.left = x + 'px';
+            tempDiv.style.top = y + 'px';
+            document.querySelector('.container').appendChild(tempDiv);
+
+            setTimeout(() => tempDiv.remove(), 1000);
+        }
+
+        // 顯示血濺效果
+        function showBloodSplat(x, y) {
+            const splats = ['💥', '💢', '🩸'];
+            const splat = splats[Math.floor(Math.random() * splats.length)];
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.className = 'hit-effect blood-splat';
+            tempDiv.textContent = splat;
+            tempDiv.style.left = x + 'px';
+            tempDiv.style.top = y + 'px';
+            document.querySelector('.container').appendChild(tempDiv);
+
+            setTimeout(() => tempDiv.remove(), 600);
+        }
+
+        // 顯示連擊
+        function showCombo() {
+            const comboDisplay = document.getElementById('comboDisplay');
+            comboDisplay.textContent = `連擊 x${game.combo}`;
+            comboDisplay.style.display = 'block';
+            
+            setTimeout(() => {
+                comboDisplay.style.display = 'none';
+            }, 500);
+        }
+
+        // 更新HP條
+        function updateHPBar() {
+            const percentage = (game.currentHP / game.maxHP) * 100;
+            document.getElementById('hpBar').style.width = percentage + '%';
+            document.getElementById('hpPercent').textContent = Math.round(percentage) + '%';
+            document.getElementById('hpText').textContent = `${game.currentHP} / ${game.maxHP}`;
+            document.getElementById('combo').textContent = game.combo;
+            document.getElementById('totalDamage').textContent = game.totalDamage;
+        }
+
+        // 顯示勝利訊息
+        function showVictory() {
+            game.isVictory = true;
+            document.getElementById('victoryModal').style.display = 'block';
+        }
+
+        // 確認按鈕
+        document.getElementById('confirmBtn').addEventListener('click', () => {
+            resetGame();
+        });
+
+        // 重置遊戲
+        function resetGame() {
+            game.maxHP = 100;
+            game.currentHP = 100;
+            game.combo = 0;
+            game.totalDamage = 0;
+            game.lastComboTime = 0;
+            game.isVictory = false;
+
+            game.dummy.hitCooldown = 0;
+            game.dummy.shakeIntensity = 0;
+            game.dummy.reactionTime = 0;
+            game.dummy.reactionType = null;
+
+            game.leftFist.attackCooldown = 0;
+            game.leftFist.isAttacking = false;
+            game.leftFist.x = canvas.width / 4;
+            game.leftFist.y = canvas.height / 2 + 100;
+            game.leftFist.targetX = game.leftFist.x;
+            game.leftFist.targetY = game.leftFist.y;
+
+            game.rightFist.attackCooldown = 0;
+            game.rightFist.isAttacking = false;
+            game.rightFist.x = canvas.width * 3 / 4;
+            game.rightFist.y = canvas.height / 2 + 100;
+            game.rightFist.targetX = game.rightFist.x;
+            game.rightFist.targetY = game.rightFist.y;
+
+            document.getElementById('victoryModal').style.display = 'none';
+            updateHPBar();
+        }
+
+        // 更新連擊計時器
+        setInterval(() => {
+            if (game.combo > 0 && Date.now() - game.lastComboTime > game.comboTimeout) {
+                game.combo = 0;
+                document.getElementById('combo').textContent = '0';
+            }
+        }, 100);
+
+        // 遊戲循環
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 更新冷卻時間
+            if (game.dummy.hitCooldown > 0) game.dummy.hitCooldown--;
+            if (game.dummy.reactionTime > 0) game.dummy.reactionTime--;
+            if (game.dummy.shakeIntensity > 0) game.dummy.shakeIntensity *= 0.9;
+            if (game.leftFist.attackCooldown > 0) game.leftFist.attackCooldown--;
+            if (game.rightFist.attackCooldown > 0) game.rightFist.attackCooldown--;
+
+            // 更新拳頭位置
+            updateFist(game.leftFist);
+            updateFist(game.rightFist);
+
+            // 繪製背景
+            drawBackground();
+
+            // 繪製假人
+            drawDummy();
+
+            // 繪製拳頭
+            drawFist(game.leftFist);
+            drawFist(game.rightFist);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 更新拳頭
+        function updateFist(fist) {
+            const speed = 15;
+            const dx = fist.targetX - fist.x;
+            const dy = fist.targetY - fist.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist > speed) {
+                fist.x += (dx / dist) * speed;
+                fist.y += (dy / dist) * speed;
+            } else {
+                fist.x = fist.targetX;
+                fist.y = fist.targetY;
+                fist.isAttacking = false;
+            }
+        }
+
+        // 繪製拳頭
+        function drawFist(fist) {
+            ctx.save();
+
+            // 應用震動效果
+            if (game.dummy.shakeIntensity > 0) {
+                ctx.translate(
+                    (Math.random() - 0.5) * game.dummy.shakeIntensity,
+                    (Math.random() - 0.5) * game.dummy.shakeIntensity
+                );
+            }
+
+            // 繪製拳頭
+            ctx.fillStyle = '#D2B48C';
+            ctx.beginPath();
+            ctx.arc(fist.x, fist.y, fist.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 繪製拳頭邊界
+            ctx.strokeStyle = '#8B4513';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 繪製指關節
+            ctx.fillStyle = '#A0826D';
+            for (let i = 0; i < 4; i++) {
+                const angle = (i / 4) * Math.PI * 2;
+                const x = fist.x + Math.cos(angle) * (fist.radius - 8);
+                const y = fist.y + Math.sin(angle) * (fist.radius - 8);
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // 繪製假人
+        function drawDummy() {
+            ctx.save();
+
+            // 應用震動效果
+            if (game.dummy.shakeIntensity > 0) {
+                ctx.translate(
+                    (Math.random() - 0.5) * game.dummy.shakeIntensity,
+                    (Math.random() - 0.5) * game.dummy.shakeIntensity
+                );
+            }
+
+            const dummy = game.dummy;
+
+            // 繪製身體
+            ctx.fillStyle = '#FF6347';
+            ctx.fillRect(
+                dummy.bodyX - dummy.bodyWidth / 2,
+                dummy.bodyY,
+                dummy.bodyWidth,
+                dummy.bodyHeight
+            );
+
+            // 繪製腿
+            ctx.fillStyle = '#333';
+            ctx.fillRect(dummy.bodyX - 20, dummy.bodyY + dummy.bodyHeight, 15, 60);
+            ctx.fillRect(dummy.bodyX + 5, dummy.bodyY + dummy.bodyHeight, 15, 60);
+
+            // 繪製頭部（使用上傳的圖片或預設）
+            if (dummy.image) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(dummy.x, dummy.y, dummy.headRadius, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.drawImage(
+                    dummy.image,
+                    dummy.x - dummy.headRadius,
+                    dummy.y - dummy.headRadius,
+                    dummy.headRadius * 2,
+                    dummy.headRadius * 2
+                );
+                ctx.restore();
+            } else {
+                ctx.fillStyle = '#FFD7B5';
+                ctx.beginPath();
+                ctx.arc(dummy.x, dummy.y, dummy.headRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#8B4513';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // 繪製眼睛
+            drawEye(dummy.x - 25, dummy.y - 20, dummy.reactionType === 'head');
+            drawEye(dummy.x + 25, dummy.y - 20, dummy.reactionType === 'head');
+
+            // 繪製嘴巴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            if (dummy.reactionType === 'head') {
+                ctx.arc(dummy.x, dummy.y + 20, 15, 0, Math.PI);
+            } else {
+                ctx.arc(dummy.x, dummy.y + 15, 10, 0, Math.PI);
+            }
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // 繪製眼睛
+        function drawEye(x, y, isHit) {
+            const dummy = game.dummy;
+
+            // 眼白
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(x, y, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 瞳孔
+            ctx.fillStyle = '#333';
+            let pupilX = x;
+            let pupilY = y;
+
+            if (isHit) {
+                // 被打到時的反應
+                pupilX = x + (Math.random() - 0.5) * 8;
+                pupilY = y + (Math.random() - 0.5) * 8;
+            }
+
+            ctx.beginPath();
+            ctx.arc(pupilX, pupilY, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 眼睛邊框
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(x, y, 12, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // 繪製背景
+        function drawBackground() {
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#444');
+            gradient.addColorStop(1, '#222');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 繪製拳擊台
+            ctx.fillStyle = 'rgba(139, 69, 19, 0.3)';
+            ctx.fillRect(
+                canvas.width / 2 - 300,
+                canvas.height / 2 + 250,
+                600,
+                100
+            );
+
+            // 繪製台邊框
+            ctx.strokeStyle = '#8B4513';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(
+                canvas.width / 2 - 300,
+                canvas.height / 2 + 250,
+                600,
+                100
+            );
+
+            // 繪製聚光燈
+            ctx.fillStyle = 'rgba(255, 255, 0, 0.05)';
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 200, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 啟動遊戲循環
+        gameLoop();
+    </script>
+</body>
+</html>
