@@ -596,6 +596,7 @@
         gameContainer.addEventListener('click', (e) => {
             e.preventDefault();
             if (gameState.gameOver) return;
+            console.log('kk');
 
             const dummyHeadRect = dummyHead.getBoundingClientRect();
             const dummyBodyRect = dummyBody.getBoundingClientRect();
@@ -627,6 +628,7 @@
         gameContainer.addEventListener('touchstart', (e) => {
             e.preventDefault();
             if (gameState.gameOver) return;
+            console.log('kk');
 
             const touch = e.touches[0];
             const dummyHeadRect = dummyHead.getBoundingClientRect();
@@ -688,9 +690,9 @@
 
             if (isHead) {
                 blinkEyes();
-                shakeElement(dummyHead, 30, 150);
+                shakeElement(dummyHead, 10, 150);
             } else {
-                shakeElement(dummyBody, 30, 150);
+                shakeElement(dummyBody, 10, 150);
             }
 
             // 震動反饋
