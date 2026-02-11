@@ -574,6 +574,7 @@
 
         // 遊戲容器點擊事件
         gameContainer.addEventListener('click', (e) => {
+            e.preventDefault();
             if (gameState.gameOver) return;
 
             const dummyHeadRect = dummyHead.getBoundingClientRect();
@@ -604,6 +605,7 @@
 
         // 觸摸點擊支持
         gameContainer.addEventListener('touchstart', (e) => {
+            e.preventDefault();
             if (gameState.gameOver) return;
 
             const touch = e.touches[0];
@@ -690,6 +692,7 @@
             const dummyRect = dummyHead.getBoundingClientRect();
             const isLeft = x < dummyRect.left + dummyRect.width / 2;
             const fist = isLeft ? leftFist : rightFist;
+            console.log('isLeft',isLeft);
 
             fist.style.transform = 'scale(1.2)';
             setTimeout(() => {
