@@ -172,6 +172,32 @@
       filter:drop-shadow(0 5px 15px rgba(0,0,0,0.5));
       transition: transform 0.1s;
     }
+     .fist.left {
+            left: 30px;
+        }
+
+      .fist.right {
+            right: 30px;
+        }
+
+      .fist-icon {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f4a460 0%, #d2691e 100%);
+            border-radius: 15px 15px 5px 5px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 5px;
+        }
+
+        /* 血濺效果 */
+        .blood-splash {
+            position: absolute;
+            pointer-events: none;
+        }
     .fist-img {
       width:100%;
       height:100%;
@@ -299,27 +325,38 @@
     </div>
 
     <div id="dummyContainer">
-      <img id="dummyImage" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 150'%3E%3Ccircle cx='50' cy='30' r='20' fill='%23FFD700'/%3E%3Crect x='30' y='55' width='40' height='60' fill='%23FF6B6B' rx='5'/%3E%3Crect x='20' y='70' width='15' height='40' fill='%23FFD700'/%3E%3Crect x='65' y='70' width='15' height='40' fill='%23FFD700'/%3E%3C/svg%3E" alt="假人"/>
-      <div id="dummyEyes">
-        <div class="dummy-eye" id="eye1"></div>
-        <div class="dummy-eye" id="eye2"></div>
-      </div>
-      <div id="healthBarContainer">
-        <div id="healthBarLabel">HP</div>
-        <div id="healthBar">
-          <div id="healthFill"></div>
+            <div id="dummyHead">
+                <img id="headImage" src="" alt="頭部照片">
+                <div class="eyes">
+                    <div class="eye" id="eye1">
+                        <div class="pupil"></div>
+                    </div>
+                    <div class="eye" id="eye2">
+                        <div class="pupil"></div>
+                    </div>
+                </div>
+              <div class="nose">
+                <div class="nose-circle"></div>
+                <div class="nose-circle"></div>
+              </div>
+            </div>
+            <div id="dummyBody"></div>
+            <div id="healthBarContainer">
+                <div id="healthBarLabel">HP</div>
+                <div id="healthBar">
+                    <div id="healthFill"></div>
+                </div>
+                <div id="healthText">100/100</div>
+            </div>
         </div>
-        <div id="healthText">100/100</div>
-      </div>
-    </div>
 
-    <div class="fist" id="leftFist">
-      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Crect x='10' y='20' width='80' height='70' fill='%23D2691E' rx='10'/%3E%3Ccircle cx='20' cy='10' r='8' fill='%23D2691E'/%3E%3Ccircle cx='40' cy='5' r='8' fill='%23D2691E'/%3E%3Ccircle cx='60' cy='5' r='8' fill='%23D2691E'/%3E%3Ccircle cx='80' cy='10' r='8' fill='%23D2691E'/%3E%3Crect x='15' y='100' width='70' height='20' fill='%23333' rx='5'/%3E%3C/svg%3E" class="fist-img" alt="左拳"/>
-    </div>
-
-    <div class="fist" id="rightFist">
-      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Crect x='10' y='20' width='80' height='70' fill='%23D2691E' rx='10'/%3E%3Ccircle cx='20' cy='10' r='8' fill='%23D2691E'/%3E%3Ccircle cx='40' cy='5' r='8' fill='%23D2691E'/%3E%3Ccircle cx='60' cy='5' r='8' fill='%23D2691E'/%3E%3Ccircle cx='80' cy='10' r='8' fill='%23D2691E'/%3E%3Crect x='15' y='100' width='70' height='20' fill='%23333' rx='5'/%3E%3C/svg%3E" class="fist-img" alt="右拳"/>
-    </div>
+        <!-- 拳頭 -->
+        <div class="fist left" id="leftFist">
+            <div class="fist-icon">👊</div>
+        </div>
+        <div class="fist right" id="rightFist">
+            <div class="fist-icon">👊</div>
+        </div>
 
     <div class="key-hint">
       👊 左鍵 = 左拳 | 右鍵 = 右拳
@@ -351,6 +388,9 @@
       lastPunchType: null
     };
 
+    const gameContainer = document.getElementById('gameContainer');
+    const dummyHead = document.getElementById('dummyHead');
+    const dummyBody = document.getElementById('dummyBody');
     const healthFill = document.getElementById('healthFill');
     const healthText = document.getElementById('healthText');
     const totalDamageDisplay = document.getElementById('totalDamage');
